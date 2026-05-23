@@ -1,7 +1,5 @@
-// Helper to manage storage and simulate AI generation
-
-const STORAGE_KEY = 'ideavalidator_ideas';
 const USER_KEY = 'ideavalidator_user';
+const API_BASE = 'http://localhost:5000/api';
 
 const COMPETITORS_BY_INDUSTRY = {
   EdTech: [
@@ -42,7 +40,7 @@ const COMPETITORS_BY_INDUSTRY = {
   ]
 };
 
-// Hash function to make score/metrics deterministic but look random for a given name
+// Generates a unique numeric hash for a given string to keep generated scores deterministic
 const hashString = (str) => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -51,30 +49,34 @@ const hashString = (str) => {
   return Math.abs(hash);
 };
 
+// Calculates a value within a specified range based on a numeric hash
 const getScaleValue = (hash, min, max) => {
   return min + (hash % (max - min + 1));
 };
 
-export const getIdeas = () => {
-  const ideas = localStorage.getItem(STORAGE_KEY);
-  return ideas ? JSON.parse(ideas) : [];
-};
-
-export const saveIdea = (ideaInput) => {
-  const ideas = getIdeas();
-  const id = ideaInput.id || 'idea_' + Date.now();
-  const dateStr = new Date().toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
+// Generates all scorecards, market size estimations, risks, strengths, and plans from database inputs
+const enhanceIdeaWithAnalysis = (dbIdea) => {
+  const ideaInput = {
+    id: dbIdea.id,
+    startupName: dbIdea.name,
+    problem: dbIdea.problem,
+    targetCustomer: dbIdea.target_customer,
+    industry: dbIdea.industry,
+    businessModel: dbIdea.business_model,
+    geography: dbIdea.geography,
+    pricing: dbIdea.pricing || '',
+    assumptions: dbIdea.assumptions || '',
+    founderBg: dbIdea.founder_bg || '',
+    date: new Date(dbIdea.created_at).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  };
 
   const hash = hashString(ideaInput.startupName || 'default');
-
-  // Compute overall score
   const overallScore = getScaleValue(hash, 55, 94);
 
-  // Status mapping
   let status = 'Pivot';
   let statusClasses = 'bg-amber-50 text-amber-700 border border-amber-200';
   let iconBg = 'bg-amber-100';
@@ -98,7 +100,6 @@ export const saveIdea = (ideaInput) => {
     recommendationDesc = 'High execution risks and competitor threats';
   }
 
-  // Category Scores
   const categoryData = [
     { name: 'Market Opportunity', score: getScaleValue(hash + 1, 60, 95) },
     { name: 'Problem Severity', score: getScaleValue(hash + 2, 55, 95) },
@@ -108,15 +109,12 @@ export const saveIdea = (ideaInput) => {
     { name: 'Founder Market Fit', score: getScaleValue(hash + 6, 60, 95) }
   ];
 
-  // Market size
   const marketSize = (getScaleValue(hash + 7, 10, 99) / 10).toFixed(1) + 'B';
   const competitorCount = getScaleValue(hash + 8, 3, 9);
   const mvpEffortMonths = getScaleValue(hash + 9, 2, 5);
 
-  // Competitors
   const competitors = COMPETITORS_BY_INDUSTRY[ideaInput.industry] || COMPETITORS_BY_INDUSTRY['Other'];
 
-  // Strengths
   const strengths = [
     `Strong target addressable market with high pain points for ${ideaInput.targetCustomer || 'potential users'}`,
     `Business model ${ideaInput.businessModel || 'hypothesized'} offers potential scalable unit economics`,
@@ -126,7 +124,6 @@ export const saveIdea = (ideaInput) => {
       : `Strong focus on solving direct issues regarding: "${ideaInput.problem?.substring(0, 50)}..."`
   ];
 
-  // Risks
   const risks = [
     `Intense competitive landscape in the ${ideaInput.industry || 'general'} tech sector`,
     `Customer acquisition costs for targeting ${ideaInput.targetCustomer || 'users'} might escalate`,
@@ -134,7 +131,6 @@ export const saveIdea = (ideaInput) => {
     `Potential challenges scaling operations in ${ideaInput.geography || 'local markets'}`
   ];
 
-  // 7-day validation plan
   const planDays = [
     {
       day: 1,
@@ -173,7 +169,6 @@ export const saveIdea = (ideaInput) => {
     }
   ];
 
-  // Interview Questions
   const interviewQuestions = [
     `How do you currently deal with: "${ideaInput.problem?.substring(0, 80)}"? What tools do you use?`,
     `What frustrates you most about existing solutions in the ${ideaInput.industry || 'current'} market?`,
@@ -183,7 +178,6 @@ export const saveIdea = (ideaInput) => {
     `What would make you switch from your current system to a new product?`
   ];
 
-  // Cold Email Template
   const emailText = `Hi [Name],
 
 I noticed you're active in the ${ideaInput.industry || 'industry'} space and dealing with ${ideaInput.targetCustomer || 'similar user demographics'}. I'm researching a new concept called ${ideaInput.startupName} to solve:
@@ -200,7 +194,6 @@ Best,
 [Your Name]
 Founder, ${ideaInput.startupName}`;
 
-  // MVP Roadmap
   const mvpItems = [
     {
       badge: 'Week 1',
@@ -228,10 +221,8 @@ Founder, ${ideaInput.startupName}`;
     }
   ];
 
-  const fullIdea = {
+  return {
     ...ideaInput,
-    id,
-    date: dateStr,
     score: overallScore,
     status,
     statusClasses,
@@ -251,48 +242,104 @@ Founder, ${ideaInput.startupName}`;
     emailText,
     mvpItems
   };
+};
 
-  const existingIndex = ideas.findIndex(i => i.id === id);
-  if (existingIndex > -1) {
-    ideas[existingIndex] = fullIdea;
-  } else {
-    ideas.push(fullIdea);
+// Helper function to generate standard HTTP headers including JWT token for Flask backend endpoints
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('ideavalidator_token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': token ? `Bearer ${token}` : ''
+  };
+};
+
+// Retrieves all ideas saved in the PostgreSQL database for the logged-in user and analyzes them
+export const getIdeas = async () => {
+  try {
+    const response = await fetch(`${API_BASE}/ideas`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) return [];
+    const dbIdeas = await response.json();
+    return dbIdeas.map(idea => enhanceIdeaWithAnalysis(idea));
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+};
+
+// Saves a new startup idea input to the database, returning the enhanced analysis details
+export const saveIdea = async (ideaInput) => {
+  const payload = {
+    name: ideaInput.startupName,
+    problem: ideaInput.problem,
+    target_customer: ideaInput.targetCustomer,
+    industry: ideaInput.industry,
+    business_model: ideaInput.businessModel || '',
+    geography: ideaInput.geography,
+    pricing: ideaInput.pricing || '',
+    assumptions: ideaInput.assumptions || '',
+    founder_bg: ideaInput.founderBg || ''
+  };
+
+  const response = await fetch(`${API_BASE}/ideas`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to save idea');
   }
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ideas));
-  return fullIdea;
+  const savedDbIdea = await response.json();
+  return enhanceIdeaWithAnalysis(savedDbIdea);
 };
 
-export const getIdeaById = (id) => {
-  const ideas = getIdeas();
-  return ideas.find(idea => idea.id === id);
+// Retrieves a single startup idea matching the specified database ID
+export const getIdeaById = async (id) => {
+  const ideas = await getIdeas();
+  return ideas.find(idea => String(idea.id) === String(id));
 };
 
-export const deleteIdea = (id) => {
-  const ideas = getIdeas();
-  const filtered = ideas.filter(idea => idea.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+// Deletes a specific startup idea from the PostgreSQL database using its database ID
+export const deleteIdea = async (id) => {
+  try {
+    await fetch(`${API_BASE}/ideas/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+  } catch (e) {
+    console.error(e);
+  }
 };
 
+// Returns the current active user profile information stored locally in browser session
 export const getCurrentUser = () => {
   const user = localStorage.getItem(USER_KEY);
   return user ? JSON.parse(user) : null;
 };
 
+// Saves the authenticated user profile information to the browser local storage
 export const setCurrentUser = (user) => {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 };
 
+// Removes the local user session details to perform a logout action
 export const clearCurrentUser = () => {
   localStorage.removeItem(USER_KEY);
+  localStorage.removeItem('ideavalidator_token');
 };
 
+// Clears all cached items and tokens from browser local storage
 export const clearAllData = () => {
-  localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(USER_KEY);
+  localStorage.removeItem('ideavalidator_token');
 };
 
-export const seedSampleData = () => {
+// Sends sample predefined startup ideas to the database to populate a fresh portfolio dashboard
+export const seedSampleData = async () => {
   const sample1 = {
     startupName: 'AI Tutor Platform',
     problem: 'One-size-fits-all classroom education fails to adapt to individual student learning styles and speeds, leaving many students falling behind.',
@@ -329,43 +376,9 @@ export const seedSampleData = () => {
     founderBg: 'Environmental consultant and web developer'
   };
 
-  // Clear existing first
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+  await saveIdea(sample1);
+  await saveIdea(sample2);
+  await saveIdea(sample3);
 
-  // Save each
-  const s1 = saveIdea(sample1);
-  const s2 = saveIdea(sample2);
-  const s3 = saveIdea(sample3);
-
-  // Set default overall scores/statuses to match original design perfectly:
-  // s1 -> score: 82, status: 'Go'
-  // s2 -> score: 61, status: 'Pivot'
-  // s3 -> score: 34, status: 'Stop'
-  s1.score = 82;
-  s1.status = 'Go';
-  s1.statusClasses = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-  s1.iconBg = 'bg-[#534AB7]/10';
-  s1.iconColor = 'text-[#534AB7]';
-  s1.recommendationStatus = 'Proceed';
-  s1.recommendationDesc = 'Strong market opportunity detected';
-
-  s2.score = 61;
-  s2.status = 'Pivot';
-  s2.statusClasses = 'bg-amber-50 text-amber-700 border border-amber-200';
-  s2.iconBg = 'bg-amber-100';
-  s2.iconColor = 'text-amber-600';
-  s2.recommendationStatus = 'Proceed with caution';
-  s2.recommendationDesc = 'Moderate validation required';
-
-  s3.score = 34;
-  s3.status = 'Stop';
-  s3.statusClasses = 'bg-red-50 text-red-700 border border-red-200';
-  s3.iconBg = 'bg-red-100';
-  s3.iconColor = 'text-red-600';
-  s3.recommendationStatus = 'Stop / Re-evaluate';
-  s3.recommendationDesc = 'High execution risks and competitor threats';
-
-  const ideas = [s1, s2, s3];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ideas));
-  return ideas;
+  return getIdeas();
 };

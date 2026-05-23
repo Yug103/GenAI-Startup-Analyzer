@@ -20,17 +20,21 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  // Authenticates user with the Flask backend and saves session data locally
   const loginUser = async (email, password) => {
     const result = await api.login(email, password);
     setUser(result.user);
     setToken(result.token);
+    localStorage.setItem('ideavalidator_user', JSON.stringify(result.user));
     localStorage.setItem('ideavalidator_token', result.token);
   };
 
+  // Registers a new user via the Flask backend and saves session data locally
   const registerUser = async (firstName, lastName, email, password, role) => {
     const result = await api.register(firstName, lastName, email, password, role);
     setUser(result.user);
     setToken(result.token);
+    localStorage.setItem('ideavalidator_user', JSON.stringify(result.user));
     localStorage.setItem('ideavalidator_token', result.token);
   };
 

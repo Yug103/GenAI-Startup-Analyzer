@@ -2,16 +2,20 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import RocketIcon from '../components/RocketIcon';
 import EyeIcon from '../components/EyeIcon';
-import { setCurrentUser } from '../utils/storage';
+import { useAuth } from '../context/AuthContext';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { registerUser } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const getPasswordStrength = () => {
     if (password.length === 0) return null;
@@ -22,16 +26,21 @@ export default function RegisterPage() {
 
   const strength = getPasswordStrength();
 
-  const handleSubmit = (e) => {
+  // Handles user registration by calling the backend API and redirecting to login on success
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setCurrentUser({
-      firstName: firstName || 'User',
-      lastName: lastName,
-      email,
-      role: role || 'Founder'
-    });
-    console.log({ firstName, lastName, email, password, role });
-    navigate('/dashboard');
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      await registerUser(firstName, lastName, email, password, role);
+      setSuccess(true);
+      setTimeout(() => navigate('/'), 1500);
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -159,12 +168,27 @@ export default function RegisterPage() {
             </select>
           </div>
 
+          {/* Error message */}
+          {error && (
+            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          {/* Success message */}
+          {success && (
+            <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
+              Account created successfully! Redirecting to login...
+            </div>
+          )}
+
           {/* Submit button */}
           <button
             type="submit"
-            className="w-full rounded-lg bg-[#534AB7] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#463faa] hover:shadow-md active:scale-[0.98]"
+            disabled={isSubmitting}
+            className="w-full rounded-lg bg-[#534AB7] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#463faa] hover:shadow-md active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Create account
+            {isSubmitting ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 

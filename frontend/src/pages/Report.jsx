@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -9,12 +9,33 @@ export default function ReportPage() {
   const navigate = useNavigate()
   const id = searchParams.get('id')
 
-  let idea = getIdeaById(id)
-  if (!idea) {
-    const all = getIdeas()
-    if (all.length > 0) {
-      idea = all[0]
+  const [idea, setIdea] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadIdea = async () => {
+      let found = await getIdeaById(id)
+      if (!found) {
+        const all = await getIdeas()
+        if (all.length > 0) {
+          found = all[0]
+        }
+      }
+      setIdea(found)
+      setLoading(false)
     }
+    loadIdea()
+  }, [id])
+
+  const [activeSection, setActiveSection] = useState('scorecard')
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex flex-col justify-center items-center p-6 text-center">
+        <div className="w-12 h-12 border-4 border-[#534AB7] border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-500 text-sm">Loading your report analysis...</p>
+      </div>
+    )
   }
 
   if (!idea) {
@@ -31,8 +52,6 @@ export default function ReportPage() {
       </div>
     )
   }
-
-  const [activeSection, setActiveSection] = useState('scorecard')
 
   const sidebarLinks = [
     { label: 'Scorecard', id: 'scorecard' },

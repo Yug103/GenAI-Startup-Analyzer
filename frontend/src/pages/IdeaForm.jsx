@@ -66,7 +66,7 @@ export default function IdeaSubmitPage() {
   const getInputClass = (field) => (errors[field] ? inputError : inputNormal)
   const getSelectClass = (field) => (errors[field] ? selectError : selectNormal)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setSubmitted(true)
 
     const values = { startupName, problem, targetCustomer, industry, geography }
@@ -82,19 +82,23 @@ export default function IdeaSubmitPage() {
 
     if (Object.keys(newErrors).length > 0) return
 
-    const saved = saveIdea({
-      startupName,
-      problem,
-      targetCustomer,
-      industry,
-      geography,
-      businessModel,
-      pricing,
-      assumptions,
-      founderBg,
-    })
+    try {
+      const saved = await saveIdea({
+        startupName,
+        problem,
+        targetCustomer,
+        industry,
+        geography,
+        businessModel,
+        pricing,
+        assumptions,
+        founderBg,
+      })
 
-    navigate(`/report?id=${saved.id}`)
+      navigate(`/report?id=${saved.id}`)
+    } catch (err) {
+      alert(err.message || 'Failed to save idea to database');
+    }
   }
 
   const clearError = (field) => {

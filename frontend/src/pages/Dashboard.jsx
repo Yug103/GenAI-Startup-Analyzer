@@ -65,8 +65,12 @@ export default function DashboardPage() {
   const [toastMsg, setToastMsg] = useState(null)
 
   useEffect(() => {
-    setIdeas(getIdeas())
-    setUser(getCurrentUser())
+    const loadData = async () => {
+      const data = await getIdeas();
+      setIdeas(data);
+    };
+    loadData();
+    setUser(getCurrentUser());
   }, [])
 
   const triggerToast = (msg) => {
@@ -74,26 +78,29 @@ export default function DashboardPage() {
     setTimeout(() => setToastMsg(null), 3000)
   }
 
-  const handleSeed = () => {
-    const seeded = seedSampleData()
-    setIdeas(seeded)
-    triggerToast('Seeded sample ideas!')
+  const handleSeed = async () => {
+    const seeded = await seedSampleData();
+    setIdeas(seeded);
+    triggerToast('Seeded sample ideas!');
   }
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (window.confirm('Are you sure you want to delete all ideas?')) {
-      localStorage.setItem('ideavalidator_ideas', JSON.stringify([]))
-      setIdeas([])
-      triggerToast('All ideas cleared!')
+      for (const idea of ideas) {
+        await deleteIdea(idea.id);
+      }
+      setIdeas([]);
+      triggerToast('All ideas cleared!');
     }
   }
 
-  const handleDelete = (e, id) => {
-    e.preventDefault()
-    e.stopPropagation()
-    deleteIdea(id)
-    setIdeas(getIdeas())
-    triggerToast('Idea deleted')
+  const handleDelete = async (e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await deleteIdea(id);
+    const data = await getIdeas();
+    setIdeas(data);
+    triggerToast('Idea deleted');
   }
 
   const handleFeaturePlaceholder = (e, featureName) => {
@@ -342,24 +349,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Bottom Buttons */}
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              to="/submit"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#534AB7] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#4840a0] transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              Analyze new idea
-            </Link>
-            <button
-              onClick={(e) => handleFeaturePlaceholder(e, 'Compare Ideas')}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Compare ideas
-            </button>
-          </div>
+
         </main>
       </div>
 

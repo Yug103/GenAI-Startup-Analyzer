@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { getIdeaById, getIdeas, getCurrentUser } from '../utils/storage'
@@ -15,12 +15,37 @@ const ValidationPlanPage = () => {
   const navigate = useNavigate()
   const id = searchParams.get('id')
 
-  let idea = getIdeaById(id)
-  if (!idea) {
-    const all = getIdeas()
-    if (all.length > 0) {
-      idea = all[0]
+  const [idea, setIdea] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadIdea = async () => {
+      let found = await getIdeaById(id)
+      if (!found) {
+        const all = await getIdeas()
+        if (all.length > 0) {
+          found = all[0]
+        }
+      }
+      setIdea(found)
+      setLoading(false)
     }
+    loadIdea()
+  }, [id])
+
+  const user = getCurrentUser()
+  const userName = user ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Arun Kumar'
+
+  const [activeTab, setActiveTab] = useState('plan')
+  const [copied, setCopied] = useState(false)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex flex-col justify-center items-center p-6 text-center">
+        <div className="w-12 h-12 border-4 border-[#534AB7] border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-500 text-sm">Loading your validation plan...</p>
+      </div>
+    )
   }
 
   if (!idea) {
@@ -38,9 +63,6 @@ const ValidationPlanPage = () => {
     )
   }
 
-  const user = getCurrentUser()
-  const userName = user ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Arun Kumar'
-
   const {
     startupName,
     planDays,
@@ -48,9 +70,6 @@ const ValidationPlanPage = () => {
     emailText,
     mvpItems
   } = idea
-
-  const [activeTab, setActiveTab] = useState('plan')
-  const [copied, setCopied] = useState(false)
 
   const customizedEmail = emailText.replace('[Your Name]', userName)
   const emailParagraphs = customizedEmail.split('\n\n')
