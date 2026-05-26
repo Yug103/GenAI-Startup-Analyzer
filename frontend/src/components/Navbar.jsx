@@ -1,57 +1,33 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import RocketIcon from './RocketIcon';
 
-const RocketIcon = ({ className = "" }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 64 64"
-    fill="none"
-    className={className}
-    aria-hidden="true"
-  >
-    <path
-      d="M32 6C32 6 24 16 24 34C24 38 26 42 28 44L32 40L36 44C38 42 40 38 40 34C40 16 32 6 32 6Z"
-      fill="currentColor"
-    />
-    <circle cx="32" cy="28" r="4" fill="white" />
-    <circle cx="32" cy="28" r="2.5" fill="currentColor" opacity="0.3" />
-    <path
-      d="M24 34C20 34 17 39 17 39L24 36Z"
-      fill="currentColor"
-      opacity="0.7"
-    />
-    <path
-      d="M40 34C44 34 47 39 47 39L40 36Z"
-      fill="currentColor"
-      opacity="0.7"
-    />
-    <path
-      d="M28 44L30 52C30.5 54 31.5 56 32 58C32.5 56 33.5 54 34 52L36 44"
-      fill="currentColor"
-      opacity="0.35"
-    />
-    <path
-      d="M30 44L31 50C31.3 51 31.7 52 32 53C32.3 52 32.7 51 33 50L34 44"
-      fill="currentColor"
-      opacity="0.55"
-    />
-  </svg>
-);
-
-const Navbar = ({ children }) => {
+const Navbar = ({ children, showNewIdea = true }) => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const { user, logout } = useAuth();
-  
+  const dropdownRef = useRef(null);
+
   const initials = user
-    ? ((user.firstName?.[0] || "") + (user.lastName?.[0] || "")).toUpperCase() || "U"
-    : "AK";
+    ? ((user.firstName?.[0] || '') + (user.lastName?.[0] || '')).toUpperCase() || 'U'
+    : 'AV';
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    navigate('/');
   };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <header className="sticky top-0 z-30 h-16 w-full border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
@@ -63,54 +39,78 @@ const Navbar = ({ children }) => {
             IdeaValidator
           </span>
         </Link>
- 
+
         {/* Right side */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5">
           {children}
- 
+
+          {showNewIdea && (
+            <>
+              <button
+                onClick={() => navigate('/submit')}
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-[#534AB7] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#463faa] hover:shadow-md active:scale-[0.97]"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                New Idea
+              </button>
+
+              {/* Mobile new idea button */}
+              <button
+                onClick={() => navigate('/submit')}
+                className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg bg-[#534AB7] text-white shadow-sm transition-all hover:bg-[#463faa] active:scale-[0.95]"
+                aria-label="New Idea"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </>
+          )}
+
+          {/* Notification bell */}
           <button
-            onClick={() => navigate("/submit")}
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-[#534AB7] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#463faa] hover:shadow-md active:scale-[0.97]"
+            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            aria-label="Notifications"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M12 4v16m8-8H4"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
               />
             </svg>
-            New Idea
           </button>
- 
-          {/* Mobile new idea button */}
+
+          {/* Help icon */}
           <button
-            onClick={() => navigate("/submit")}
-            className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg bg-[#534AB7] text-white shadow-sm transition-all hover:bg-[#463faa] active:scale-[0.95]"
-            aria-label="New Idea"
+            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            aria-label="Help"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M12 4v16m8-8H4"
+                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
           </button>
- 
+
           {/* Avatar Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowDropdown(!showDropdown)}
               className="flex items-center justify-center w-9 h-9 rounded-full bg-[#534AB7]/10 text-[#534AB7] text-sm font-semibold select-none cursor-pointer transition-colors hover:bg-[#534AB7]/20 focus:outline-none"
@@ -122,7 +122,9 @@ const Navbar = ({ children }) => {
               <div className="absolute right-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg ring-1 ring-black/5 z-50">
                 <div className="px-4 py-2 border-b border-gray-100">
                   <p className="text-xs text-gray-400">Signed in as</p>
-                  <p className="text-sm font-medium text-gray-900 truncate">{user?.email || 'guest@example.com'}</p>
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {user?.email || 'guest@example.com'}
+                  </p>
                 </div>
                 <button
                   onClick={handleLogout}
