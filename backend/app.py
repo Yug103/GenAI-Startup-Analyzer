@@ -43,6 +43,11 @@ def invalid_token_response(callback):
 def expired_token_response(jwt_header, jwt_payload):
     return jsonify({"error": "Token has expired"}), 401
 
-if __name__ == "__main__":
+# Initialize database tables (runs on both local and gunicorn startup)
+try:
     init_db()
+except Exception as e:
+    print(f"Database initialization error: {e}")
+
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
