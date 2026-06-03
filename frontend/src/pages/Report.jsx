@@ -392,6 +392,30 @@ export default function ReportPage() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Primary Risks */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5" ref={sectionRefs.risks}>
+              <div className="flex items-center gap-2 mb-4">
+                <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <h4 className="text-lg font-semibold text-red-600">Primary Risks</h4>
+              </div>
+              <div className="space-y-4">
+                {risks && risks.map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-3 h-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </span>
+                    <div>
+                      <p className="text-sm text-gray-900">{item}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
               
               {/* Risks subsection */}
               <div className="mt-6 border-t border-gray-100 pt-4">
