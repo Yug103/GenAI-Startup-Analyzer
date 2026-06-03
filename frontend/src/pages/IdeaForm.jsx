@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import Sidebar from '../components/Sidebar'
 import { saveIdea } from '../utils/storage'
 
 const INDUSTRIES = ['', 'EdTech', 'FinTech', 'HealthTech', 'AgriTech', 'Logistics', 'Other']
 const GEOGRAPHIES = ['', 'India', 'US', 'Europe', 'Southeast Asia', 'Global', 'Other']
 const BUSINESS_MODELS = ['', 'SaaS', 'Marketplace', 'D2C', 'Freemium', 'B2B', 'Other']
 
-const REQUIRED_FIELDS = ['startupName', 'problem', 'targetCustomer', 'industry', 'geography']
+const REQUIRED_FIELDS = ['startupName', 'problem', 'targetCustomer', 'industry', 'geography', 'businessModel']
 
 const SparkleIcon = () => (
   <svg
@@ -34,6 +35,37 @@ const ChevronIcon = () => (
       d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
       clipRule="evenodd"
     />
+  </svg>
+)
+
+const InfoCircleIcon = () => (
+  <svg
+    className="h-5 w-5 text-[#534AB7]"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="16" x2="12" y2="12" />
+    <line x1="12" y1="8" x2="12.01" y2="8" />
+  </svg>
+)
+
+const BriefcaseIcon = () => (
+  <svg
+    className="h-5 w-5 text-[#534AB7]"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+    <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
   </svg>
 )
 
@@ -69,7 +101,7 @@ export default function IdeaSubmitPage() {
   const handleSubmit = async () => {
     setSubmitted(true)
 
-    const values = { startupName, problem, targetCustomer, industry, geography }
+    const values = { startupName, problem, targetCustomer, industry, geography, businessModel }
     const newErrors = {}
 
     REQUIRED_FIELDS.forEach((field) => {
@@ -108,25 +140,29 @@ export default function IdeaSubmitPage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-[#F8F9FA]">
       <Navbar />
+      <Sidebar activePage="New Idea" upgradeText="Upgrade to Pro for unlimited reports" />
 
-      <main className="min-h-[calc(100vh-4rem)] bg-[#F8F9FA] px-4 py-8">
-        <div className="mx-auto max-w-[680px]">
+      <main className="lg:ml-[200px] flex-1 px-4 py-8 min-h-[calc(100vh-4rem)]">
+        <div className="max-w-[680px] mx-auto">
           {/* Page heading */}
           <h1 className="text-2xl font-bold text-gray-900">Submit your startup idea</h1>
-          <p className="mb-8 mt-1 text-sm text-gray-500">
+          <p className="text-sm text-gray-500 mt-1 mb-8">
             The more specific you are, the better the AI analysis
           </p>
 
           {/* Card 1 — Basic information */}
-          <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-5 text-base font-semibold text-gray-900">Basic information</h2>
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mb-6">
+            <div className="flex items-center gap-2 mb-5">
+              <InfoCircleIcon />
+              <h2 className="text-base font-semibold text-gray-900">Basic information</h2>
+            </div>
 
-            {/* Startup name */}
+            {/* Startup Name */}
             <div className="mb-4">
               <label htmlFor="startupName" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Startup name
+                Startup Name <span className="text-red-500">*</span>
               </label>
               <input
                 id="startupName"
@@ -138,17 +174,17 @@ export default function IdeaSubmitPage() {
                   setStartupName(e.target.value)
                   clearError('startupName')
                 }}
-                placeholder="e.g., AcmeTech"
+                placeholder="e.g. Acme Corp"
               />
               {errors.startupName && (
                 <p className="mt-1 text-xs text-red-500">This field is required</p>
               )}
             </div>
 
-            {/* Problem being solved */}
+            {/* Problem Statement */}
             <div className="mb-4">
               <label htmlFor="problem" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Problem being solved
+                Problem Statement <span className="text-red-500">*</span>
               </label>
               <textarea
                 id="problem"
@@ -160,17 +196,17 @@ export default function IdeaSubmitPage() {
                   setProblem(e.target.value)
                   clearError('problem')
                 }}
-                placeholder="Describe the core problem your startup addresses"
+                placeholder="What specific problem are you solving?"
               />
               {errors.problem && (
                 <p className="mt-1 text-xs text-red-500">This field is required</p>
               )}
             </div>
 
-            {/* Target customer */}
+            {/* Target Customer */}
             <div className="mb-4">
               <label htmlFor="targetCustomer" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Target customer
+                Target Customer <span className="text-red-500">*</span>
               </label>
               <input
                 id="targetCustomer"
@@ -182,7 +218,7 @@ export default function IdeaSubmitPage() {
                   setTargetCustomer(e.target.value)
                   clearError('targetCustomer')
                 }}
-                placeholder="e.g., Small business owners, college students"
+                placeholder="Who experiences this problem the most?"
               />
               {errors.targetCustomer && (
                 <p className="mt-1 text-xs text-red-500">This field is required</p>
@@ -190,11 +226,11 @@ export default function IdeaSubmitPage() {
             </div>
 
             {/* Industry & Geography side by side */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Industry */}
               <div>
                 <label htmlFor="industry" className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Industry
+                  Industry <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <select
@@ -208,7 +244,7 @@ export default function IdeaSubmitPage() {
                     }}
                   >
                     <option value="" disabled>
-                      Select industry
+                      Select Industry
                     </option>
                     {INDUSTRIES.filter(Boolean).map((opt) => (
                       <option key={opt} value={opt}>
@@ -226,7 +262,7 @@ export default function IdeaSubmitPage() {
               {/* Geography */}
               <div>
                 <label htmlFor="geography" className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Geography
+                  Geography <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <select
@@ -240,7 +276,7 @@ export default function IdeaSubmitPage() {
                     }}
                   >
                     <option value="" disabled>
-                      Select geography
+                      Select Geography
                     </option>
                     {GEOGRAPHIES.filter(Boolean).map((opt) => (
                       <option key={opt} value={opt}>
@@ -258,25 +294,32 @@ export default function IdeaSubmitPage() {
           </div>
 
           {/* Card 2 — Business details */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-5 text-base font-semibold text-gray-900">Business details</h2>
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mb-6">
+            <div className="flex items-center gap-2 mb-5">
+              <BriefcaseIcon />
+              <h2 className="text-base font-semibold text-gray-900">Business details</h2>
+            </div>
 
-            {/* Business model & Pricing side by side */}
-            <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* Business model */}
+            {/* Business Model & Pricing side by side */}
+            <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Business Model */}
               <div>
                 <label htmlFor="businessModel" className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Business model
+                  Business Model <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <select
                     id="businessModel"
-                    className={selectNormal}
+                    required
+                    className={getSelectClass('businessModel')}
                     value={businessModel}
-                    onChange={(e) => setBusinessModel(e.target.value)}
+                    onChange={(e) => {
+                      setBusinessModel(e.target.value)
+                      clearError('businessModel')
+                    }}
                   >
                     <option value="" disabled>
-                      Select model
+                      Select Model
                     </option>
                     {BUSINESS_MODELS.filter(Boolean).map((opt) => (
                       <option key={opt} value={opt}>
@@ -286,12 +329,15 @@ export default function IdeaSubmitPage() {
                   </select>
                   <ChevronIcon />
                 </div>
+                {errors.businessModel && (
+                  <p className="mt-1 text-xs text-red-500">This field is required</p>
+                )}
               </div>
 
-              {/* Pricing assumption */}
+              {/* Pricing Strategy */}
               <div>
                 <label htmlFor="pricing" className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Pricing assumption
+                  Pricing Strategy
                 </label>
                 <input
                   id="pricing"
@@ -299,15 +345,15 @@ export default function IdeaSubmitPage() {
                   className={inputNormal}
                   value={pricing}
                   onChange={(e) => setPricing(e.target.value)}
-                  placeholder="e.g., $10/month per user"
+                  placeholder="Select Strategy"
                 />
               </div>
             </div>
 
-            {/* Key assumptions */}
+            {/* Key Assumptions */}
             <div className="mb-4">
               <label htmlFor="assumptions" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Key assumptions
+                Key Assumptions
               </label>
               <textarea
                 id="assumptions"
@@ -315,14 +361,14 @@ export default function IdeaSubmitPage() {
                 className={inputNormal}
                 value={assumptions}
                 onChange={(e) => setAssumptions(e.target.value)}
-                placeholder="List the key assumptions behind your idea"
+                placeholder="What must be true for this to succeed?"
               />
             </div>
 
-            {/* Founder background */}
+            {/* Founder Background */}
             <div>
               <label htmlFor="founderBg" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Founder background{' '}
+                Founder Background{' '}
                 <span className="text-gray-400">(Optional)</span>
               </label>
               <input
@@ -331,7 +377,7 @@ export default function IdeaSubmitPage() {
                 className={inputNormal}
                 value={founderBg}
                 onChange={(e) => setFounderBg(e.target.value)}
-                placeholder="Brief background of the founding team"
+                placeholder="Relevant experience or domain expertise"
               />
             </div>
           </div>
@@ -340,7 +386,7 @@ export default function IdeaSubmitPage() {
           <div className="mt-6 flex justify-end gap-3">
             <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/dashboard')}
               className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
             >
               Cancel
@@ -356,6 +402,6 @@ export default function IdeaSubmitPage() {
           </div>
         </div>
       </main>
-    </>
+    </div>
   )
 }

@@ -35,7 +35,7 @@ export default function RegisterPage() {
     try {
       await registerUser(firstName, lastName, email, password, role);
       setSuccess(true);
-      setTimeout(() => navigate('/'), 1500);
+      setTimeout(() => navigate('/login'), 1500);
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
     } finally {
@@ -195,7 +195,7 @@ export default function RegisterPage() {
         {/* Sign in link */}
         <p className="mt-6 text-center text-sm text-gray-500">
           Already have an account?{' '}
-          <Link to="/" className="font-semibold text-[#534AB7] transition hover:text-[#463faa]">
+          <Link to="/login" className="font-semibold text-[#534AB7] transition hover:text-[#463faa]">
             Sign in
           </Link>
         </p>

@@ -1,5 +1,5 @@
 const USER_KEY = 'ideavalidator_user';
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 // Sends a POST request to authenticate the user and saves their profile and token on success
 export const login = async (email, password) => {
@@ -43,4 +43,52 @@ export const register = async (firstName, lastName, email, password, role) => {
   }
 
   return login(email, password);
+};
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('ideavalidator_token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+};
+
+export const analyzeIdea = async (ideaId) => {
+  const response = await fetch(`${API_BASE}/ideas/${ideaId}/analyze`, {
+    method: 'POST',
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to analyze idea');
+  return data;
+};
+
+export const getReport = async (ideaId) => {
+  const response = await fetch(`${API_BASE}/ideas/${ideaId}/report`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get report');
+  return data;
+};
+
+export const generateValidation = async (ideaId) => {
+  const response = await fetch(`${API_BASE}/ideas/${ideaId}/validate`, {
+    method: 'POST',
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to generate validation');
+  return data;
+};
+
+export const getValidation = async (ideaId) => {
+  const response = await fetch(`${API_BASE}/ideas/${ideaId}/validation`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get validation');
+  return data;
 };

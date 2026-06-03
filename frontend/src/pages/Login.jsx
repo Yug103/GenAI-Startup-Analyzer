@@ -81,16 +81,19 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError("");
 
     try {
       await loginUser(email, password);
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
+      setError(err.message || "Invalid email or password");
     } finally {
       setIsSubmitting(false);
     }
@@ -116,6 +119,13 @@ const Login = () => {
               Validate your startup idea with AI
             </p>
           </div>
+
+          {/* Error message */}
+          {error && (
+            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           {/* ── Form ── */}
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
@@ -230,6 +240,7 @@ const Login = () => {
               )}
             </button>
           </form>
+
 
           {/* ── Footer ── */}
           <p className="mt-6 text-center text-sm text-gray-500">

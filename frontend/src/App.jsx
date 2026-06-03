@@ -7,13 +7,16 @@ import IdeaSubmitPage from "./pages/IdeaForm";
 import ReportPage from "./pages/Report";
 import ValidationPlanPage from "./pages/Validation";
 
+import HomePage from "./pages/Home";
+
 // Main application component defining the React router paths and authentication provider
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LoginPage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/submit" element={<IdeaSubmitPage />} />

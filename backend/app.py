@@ -3,25 +3,30 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
+from datetime import timedelta
 from database import init_db
 from routes.auth import auth_bp
 from routes.ideas import ideas_bp
+from routes.analysis import analysis_bp
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 
-# Enable CORS for http://localhost:5173
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
+# Enable CORS for local and production frontend
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+CORS(app, resources={r"/api/*": {"origins": [frontend_url, "http://localhost:5173"]}})
 
 # JWT Configuration
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "fallback-secret-key-change-me")
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=7)
 jwt = JWTManager(app)
 
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix="/api")
 app.register_blueprint(ideas_bp, url_prefix="/api")
+app.register_blueprint(analysis_bp, url_prefix="/api")
 
 # Returns a JSON error response when an unauthorized request is made without a token
 @jwt.unauthorized_loader

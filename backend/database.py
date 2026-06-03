@@ -41,6 +41,38 @@ def init_db():
             cur.execute("ALTER TABLE ideas ADD COLUMN IF NOT EXISTS pricing VARCHAR(255);")
             cur.execute("ALTER TABLE ideas ADD COLUMN IF NOT EXISTS assumptions TEXT;")
             cur.execute("ALTER TABLE ideas ADD COLUMN IF NOT EXISTS founder_bg TEXT;")
+            cur.execute("ALTER TABLE ideas ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';")
+            
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS reports (
+                    id SERIAL PRIMARY KEY,
+                    idea_id INTEGER REFERENCES ideas(id) ON DELETE CASCADE,
+                    overall_score INTEGER,
+                    recommendation VARCHAR(50),
+                    category_scores JSONB,
+                    strengths JSONB,
+                    weaknesses JSONB,
+                    risks JSONB,
+                    competitors JSONB,
+                    market_insights TEXT,
+                    next_steps JSONB,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS validation_plans (
+                    id SERIAL PRIMARY KEY,
+                    idea_id INTEGER REFERENCES ideas(id) ON DELETE CASCADE,
+                    interview_questions JSONB,
+                    cold_email JSONB,
+                    landing_page_copy JSONB,
+                    seven_day_plan JSONB,
+                    mvp_test_plan JSONB,
+                    success_metrics JSONB,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
             conn.commit()
     except Exception as e:
         conn.rollback()

@@ -1,5 +1,5 @@
 const USER_KEY = 'ideavalidator_user';
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 const COMPETITORS_BY_INDUSTRY = {
   EdTech: [
@@ -253,19 +253,62 @@ const getAuthHeaders = () => {
   };
 };
 
+// Helper to save idea locally when database is unavailable/unauthorized
+const saveLocalIdea = (ideaInput) => {
+  const localIdeas = JSON.parse(localStorage.getItem('ideavalidator_local_ideas') || '[]');
+  const newId = localIdeas.length ? Math.max(...localIdeas.map(i => i.id)) + 1 : 1000;
+  
+  const mockDbIdea = {
+    id: newId,
+    name: ideaInput.startupName,
+    problem: ideaInput.problem,
+    target_customer: ideaInput.targetCustomer,
+    industry: ideaInput.industry,
+    business_model: ideaInput.businessModel || '',
+    geography: ideaInput.geography,
+    pricing: ideaInput.pricing || '',
+    assumptions: ideaInput.assumptions || '',
+    founder_bg: ideaInput.founderBg || '',
+    created_at: new Date().toISOString()
+  };
+  
+  localIdeas.push(mockDbIdea);
+  localStorage.setItem('ideavalidator_local_ideas', JSON.stringify(localIdeas));
+  
+  return enhanceIdeaWithAnalysis(mockDbIdea);
+};
+
 // Retrieves all ideas saved in the PostgreSQL database for the logged-in user and analyzes them
 export const getIdeas = async () => {
+  let dbIdeas = [];
   try {
     const response = await fetch(`${API_BASE}/ideas`, {
       headers: getAuthHeaders()
     });
-    if (!response.ok) return [];
-    const dbIdeas = await response.json();
-    return dbIdeas.map(idea => enhanceIdeaWithAnalysis(idea));
+    if (response.ok) {
+      dbIdeas = await response.json();
+    }
   } catch (e) {
-    console.error(e);
-    return [];
+    console.error("API failed to get ideas, falling back to local only:", e);
   }
+
+  const localIdeas = JSON.parse(localStorage.getItem('ideavalidator_local_ideas') || '[]');
+  const allIdeas = [...dbIdeas, ...localIdeas];
+
+  // Remove duplicates by ID
+  const uniqueIdeas = [];
+  const seenIds = new Set();
+  for (const idea of allIdeas) {
+    if (!seenIds.has(idea.id)) {
+      seenIds.add(idea.id);
+      uniqueIdeas.push(idea);
+    }
+  }
+
+  // Sort by created_at desc
+  uniqueIdeas.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  return uniqueIdeas.map(idea => enhanceIdeaWithAnalysis(idea));
 };
 
 // Saves a new startup idea input to the database, returning the enhanced analysis details
@@ -282,19 +325,29 @@ export const saveIdea = async (ideaInput) => {
     founder_bg: ideaInput.founderBg || ''
   };
 
-  const response = await fetch(`${API_BASE}/ideas`, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify(payload)
-  });
+  try {
+    const response = await fetch(`${API_BASE}/ideas`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
 
-  if (!response.ok) {
+    if (response.ok) {
+      const savedDbIdea = await response.json();
+      return enhanceIdeaWithAnalysis(savedDbIdea);
+    }
+
+    if (response.status === 401 || response.status === 403) {
+      console.warn("Backend unauthorized, saving locally instead");
+      return saveLocalIdea(ideaInput);
+    }
+
     const errorData = await response.json();
     throw new Error(errorData.error || 'Failed to save idea');
+  } catch (err) {
+    console.warn("API save failed, saving locally as fallback:", err);
+    return saveLocalIdea(ideaInput);
   }
-
-  const savedDbIdea = await response.json();
-  return enhanceIdeaWithAnalysis(savedDbIdea);
 };
 
 // Retrieves a single startup idea matching the specified database ID
@@ -305,13 +358,18 @@ export const getIdeaById = async (id) => {
 
 // Deletes a specific startup idea from the PostgreSQL database using its database ID
 export const deleteIdea = async (id) => {
+  // Delete from local storage
+  const localIdeas = JSON.parse(localStorage.getItem('ideavalidator_local_ideas') || '[]');
+  const filteredLocal = localIdeas.filter(idea => String(idea.id) !== String(id));
+  localStorage.setItem('ideavalidator_local_ideas', JSON.stringify(filteredLocal));
+
   try {
     await fetch(`${API_BASE}/ideas/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
   } catch (e) {
-    console.error(e);
+    console.error("API delete failed:", e);
   }
 };
 
