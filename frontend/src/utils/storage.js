@@ -278,8 +278,15 @@ const saveLocalIdea = (ideaInput) => {
   return enhanceIdeaWithAnalysis(mockDbIdea);
 };
 
+let cachedIdeas = null;
+let lastFetchTime = 0;
+
 // Retrieves all ideas saved in the PostgreSQL database for the logged-in user and analyzes them
-export const getIdeas = async () => {
+export const getIdeas = async (forceRefresh = false) => {
+  if (!forceRefresh && cachedIdeas && (Date.now() - lastFetchTime < 60000)) {
+    return cachedIdeas;
+  }
+  
   let dbIdeas = [];
   try {
     const response = await fetch(`${API_BASE}/ideas`, {
@@ -308,7 +315,11 @@ export const getIdeas = async () => {
   // Sort by created_at desc
   uniqueIdeas.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-  return uniqueIdeas.map(idea => enhanceIdeaWithAnalysis(idea));
+  const enhancedIdeas = uniqueIdeas.map(idea => enhanceIdeaWithAnalysis(idea));
+  cachedIdeas = enhancedIdeas;
+  lastFetchTime = Date.now();
+  
+  return enhancedIdeas;
 };
 
 // Saves a new startup idea input to the database, returning the enhanced analysis details
@@ -346,7 +357,11 @@ export const saveIdea = async (ideaInput) => {
     throw new Error(errorData.error || 'Failed to save idea');
   } catch (err) {
     console.warn("API save failed, saving locally as fallback:", err);
-    return saveLocalIdea(ideaInput);
+    const localSaved = saveLocalIdea(ideaInput);
+    cachedIdeas = null; // Invalidate cache
+    return localSaved;
+  } finally {
+    cachedIdeas = null; // Invalidate cache on successful save too
   }
 };
 
@@ -370,6 +385,8 @@ export const deleteIdea = async (id) => {
     });
   } catch (e) {
     console.error("API delete failed:", e);
+  } finally {
+    cachedIdeas = null; // Invalidate cache
   }
 };
 
@@ -388,12 +405,14 @@ export const setCurrentUser = (user) => {
 export const clearCurrentUser = () => {
   localStorage.removeItem(USER_KEY);
   localStorage.removeItem('ideavalidator_token');
+  cachedIdeas = null;
 };
 
 // Clears all cached items and tokens from browser local storage
 export const clearAllData = () => {
   localStorage.removeItem(USER_KEY);
   localStorage.removeItem('ideavalidator_token');
+  cachedIdeas = null;
 };
 
 // Sends sample predefined startup ideas to the database to populate a fresh portfolio dashboard
