@@ -41,32 +41,12 @@ const RocketIcon = ({ className = "" }) => (
 
 const EyeIcon = ({ open }) =>
   open ? (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="w-5 h-5"
-      aria-hidden="true"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
       <circle cx="12" cy="12" r="3" />
     </svg>
   ) : (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="w-5 h-5"
-      aria-hidden="true"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
       <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
       <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
@@ -82,6 +62,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showForgotMsg, setShowForgotMsg] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -99,15 +80,17 @@ const Login = () => {
     }
   };
 
+  const handleForgotPassword = (e) => {
+    e.preventDefault();
+    setShowForgotMsg(true);
+    setTimeout(() => setShowForgotMsg(false), 3000);
+  };
+
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-12 bg-[#F8F9FA]">
       <div className="w-full max-w-[420px]">
-        {/* ── Card ── */}
-        <div
-          className="bg-white rounded-2xl border border-gray-200 shadow-[0_4px_24px_rgba(0,0,0,0.06)]
-                      px-8 py-10 sm:px-10 sm:py-12"
-        >
-          {/* ── Logo & Tagline ── */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-[0_4px_24px_rgba(0,0,0,0.06)] px-8 py-10 sm:px-10 sm:py-12">
+          {/* Logo & Tagline */}
           <div className="flex flex-col items-center mb-8">
             <div className="flex items-center gap-2.5 mb-3 select-none">
               <RocketIcon className="w-9 h-9 text-[#534AB7]" />
@@ -127,14 +110,11 @@ const Login = () => {
             </div>
           )}
 
-          {/* ── Form ── */}
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             {/* Email */}
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1.5"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
                 Email
               </label>
               <input
@@ -145,19 +125,13 @@ const Login = () => {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full rounded-lg border border-gray-300 bg-white
-                           px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400
-                           outline-none transition
-                           focus:border-[#534AB7] focus:ring-2 focus:ring-[#534AB7]/20"
+                className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#534AB7] focus:ring-2 focus:ring-[#534AB7]/20"
               />
             </div>
 
             {/* Password */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1.5"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
                 Password
               </label>
               <div className="relative">
@@ -169,33 +143,32 @@ const Login = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-lg border border-gray-300 bg-white
-                             px-3.5 py-2.5 pr-11 text-sm text-gray-900
-                             placeholder-gray-400 outline-none transition
-                             focus:border-[#534AB7] focus:ring-2 focus:ring-[#534AB7]/20"
+                  className="block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 pr-11 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#534AB7] focus:ring-2 focus:ring-[#534AB7]/20"
                 />
                 <button
                   type="button"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2
-                             text-gray-400 hover:text-gray-600 transition-colors
-                             focus:outline-none focus-visible:ring-2 focus-visible:ring-[#534AB7]/40
-                             rounded"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#534AB7]/40 rounded"
                 >
                   <EyeIcon open={showPassword} />
                 </button>
               </div>
 
               {/* Forgot password */}
-              <div className="mt-2 text-right">
-                <a
-                  href="#"
-                  className="text-xs font-medium text-[#534AB7] hover:text-[#423999]
-                             transition-colors"
+              <div className="mt-2 text-right relative">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs font-medium text-[#534AB7] hover:text-[#423999] transition-colors"
                 >
                   Forgot password?
-                </a>
+                </button>
+                {showForgotMsg && (
+                  <div className="absolute right-0 top-6 z-10 w-64 rounded-lg bg-gray-900 px-4 py-2.5 text-xs text-white shadow-lg toast-slide-down">
+                    🔒 Forgot password will be available in the next update.
+                  </div>
+                )}
               </div>
             </div>
 
@@ -203,35 +176,13 @@ const Login = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-lg bg-[#534AB7] px-4 py-2.5 text-sm font-semibold
-                         text-white shadow-sm transition-all duration-200
-                         hover:bg-[#463faa] hover:shadow-md
-                         focus-visible:outline-2 focus-visible:outline-offset-2
-                         focus-visible:outline-[#534AB7]
-                         active:scale-[0.98]
-                         disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-[#534AB7] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#463faa] hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#534AB7] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
-                  <svg
-                    className="animate-spin h-4 w-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z"
-                    />
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z" />
                   </svg>
                   Signing in…
                 </span>
@@ -241,15 +192,10 @@ const Login = () => {
             </button>
           </form>
 
-
-          {/* ── Footer ── */}
+          {/* Footer */}
           <p className="mt-6 text-center text-sm text-gray-500">
             Don&apos;t have an account?{" "}
-            <Link
-              to="/register"
-              className="font-semibold text-[#534AB7] hover:text-[#423999]
-                         transition-colors"
-            >
+            <Link to="/register" className="font-semibold text-[#534AB7] hover:text-[#423999] transition-colors">
               Create one
             </Link>
           </p>

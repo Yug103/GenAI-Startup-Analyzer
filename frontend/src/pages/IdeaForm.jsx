@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 import { saveIdea } from '../utils/storage'
+import { analyzeIdea } from '../services/api'
 
 const INDUSTRIES = ['', 'EdTech', 'FinTech', 'HealthTech', 'AgriTech', 'Logistics', 'Other']
 const GEOGRAPHIES = ['', 'India', 'US', 'Europe', 'Southeast Asia', 'Global', 'Other']
@@ -71,6 +72,8 @@ const BriefcaseIcon = () => (
 
 export default function IdeaSubmitPage() {
   const navigate = useNavigate()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [startupName, setStartupName] = useState('')
   const [problem, setProblem] = useState('')
@@ -114,6 +117,7 @@ export default function IdeaSubmitPage() {
 
     if (Object.keys(newErrors).length > 0) return
 
+    setIsSubmitting(true)
     try {
       const saved = await saveIdea({
         startupName,
@@ -127,9 +131,14 @@ export default function IdeaSubmitPage() {
         founderBg,
       })
 
+      // Trigger AI analysis in the background
+      analyzeIdea(saved.id).catch(() => {})
+
       navigate(`/report?id=${saved.id}`)
     } catch (err) {
       alert(err.message || 'Failed to save idea to database');
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -141,10 +150,10 @@ export default function IdeaSubmitPage() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
-      <Navbar />
-      <Sidebar activePage="New Idea" upgradeText="Upgrade to Pro for unlimited reports" />
+      <Navbar onMenuClick={() => setSidebarOpen(true)} />
+      <Sidebar activePage="New Idea" mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <main className="lg:ml-[200px] flex-1 px-4 py-8 min-h-[calc(100vh-4rem)]">
+      <main className="lg:ml-[200px] flex-1 px-4 py-6 sm:py-8 min-h-[calc(100vh-4rem)]">
         <div className="max-w-[680px] mx-auto">
           {/* Page heading */}
           <h1 className="text-2xl font-bold text-gray-900">Submit your startup idea</h1>
@@ -345,7 +354,7 @@ export default function IdeaSubmitPage() {
                   className={inputNormal}
                   value={pricing}
                   onChange={(e) => setPricing(e.target.value)}
-                  placeholder="Select Strategy"
+                  placeholder="e.g. $29/month per user"
                 />
               </div>
             </div>
@@ -394,10 +403,20 @@ export default function IdeaSubmitPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#534AB7] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#443DA0] focus:outline-none focus:ring-2 focus:ring-[#534AB7]/40 focus:ring-offset-2"
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#534AB7] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#443DA0] focus:outline-none focus:ring-2 focus:ring-[#534AB7]/40 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <SparkleIcon />
-              Analyze with AI
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z" /></svg>
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <SparkleIcon />
+                  Analyze with AI
+                </>
+              )}
             </button>
           </div>
         </div>

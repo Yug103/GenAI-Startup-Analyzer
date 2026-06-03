@@ -70,16 +70,17 @@ Return exactly this JSON structure:
             text = text[:-3]
         return json.loads(text.strip())
     except Exception as e:
-        try:
-            text = response.text.strip()
-            start = text.find('{')
-            end = text.rfind('}')
-            if start != -1 and end != -1:
-                clean_text = text[start:end+1]
-                return json.loads(clean_text)
-            return {"error": "Could not parse AI response"}
-        except Exception:
-            return {"error": "Could not parse AI response"}
+        if 'response' in locals() and hasattr(response, 'text'):
+            try:
+                text = response.text.strip()
+                start = text.find('{')
+                end = text.rfind('}')
+                if start != -1 and end != -1:
+                    clean_text = text[start:end+1]
+                    return json.loads(clean_text)
+            except Exception:
+                pass
+        return {"error": f"AI service error: {str(e)}"}
 
 def generate_validation(idea_data):
     if not client:
@@ -138,16 +139,17 @@ Return exactly this JSON structure:
             text = text[:-3]
         return json.loads(text.strip())
     except Exception as e:
-        try:
-            text = response.text.strip()
-            start = text.find('{')
-            end = text.rfind('}')
-            if start != -1 and end != -1:
-                clean_text = text[start:end+1]
-                return json.loads(clean_text)
-            return {"error": "Could not parse AI response"}
-        except Exception:
-            return {"error": "Could not parse AI response"}
+        if 'response' in locals() and hasattr(response, 'text'):
+            try:
+                text = response.text.strip()
+                start = text.find('{')
+                end = text.rfind('}')
+                if start != -1 and end != -1:
+                    clean_text = text[start:end+1]
+                    return json.loads(clean_text)
+            except Exception:
+                pass
+        return {"error": f"AI service error: {str(e)}"}
 
 if __name__ == "__main__":
     test = {
