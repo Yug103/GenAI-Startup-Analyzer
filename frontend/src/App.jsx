@@ -7,13 +7,14 @@ import IdeaSubmitPage from "./pages/IdeaForm";
 import ReportPage from "./pages/Report";
 import ValidationPlanPage from "./pages/Validation";
 import ValidationListPage from "./pages/ValidationList";
-
 import HomePage from "./pages/Home";
+import { Analytics } from '@vercel/analytics/react';
 
 // Main application component defining the React router paths and authentication provider
 function App() {
   return (
-    <AuthProvider>
+    <>
+      <AuthProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -24,10 +25,12 @@ function App() {
           <Route path="/report" element={<ReportPage />} />
           <Route path="/validation-plan" element={<ValidationPlanPage />} />
           <Route path="/validations" element={<ValidationListPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+      <Analytics />
+    </>
   );
 }
 
