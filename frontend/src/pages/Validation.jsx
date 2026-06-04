@@ -57,7 +57,7 @@ const ValidationPlanPage = () => {
   const handleGenerate = async () => {
     try {
       setGenerating(true)
-      await generateValidation(idea.id)
+      await generateValidation(idea.id, true)
       const res = await getValidation(idea.id)
       setValidationData(res.data)
     } catch (err) {
@@ -182,11 +182,18 @@ const ValidationPlanPage = () => {
     }
   }
 
+  const handleExportPDF = () => {
+    const oldTitle = document.title;
+    document.title = `${startupName.replace(/\s+/g, '_')}_Validation_Plan`;
+    window.print();
+    document.title = oldTitle;
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
       <Navbar onMenuClick={() => setSidebarOpen(true)}>
         <button
-          onClick={() => alert('📄 Export PDF coming in the next update')}
+          onClick={handleExportPDF}
           className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md active:scale-[0.97]"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -199,7 +206,7 @@ const ValidationPlanPage = () => {
       <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="Validation Reports" />
 
       <main className="lg:ml-[200px] flex-1 py-6 sm:py-8 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-4rem)]">
-        <div className="max-w-4xl mx-auto">
+        <div id="pdf-content" className="max-w-4xl mx-auto bg-[#F8F9FA] p-4">
           {/* Page Heading */}
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Validation Plan</h1>
@@ -223,7 +230,7 @@ const ValidationPlanPage = () => {
           </div>
 
           {/* Tab Bar */}
-          <div className="mt-6 mb-6 sm:mb-8 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="print:hidden mt-6 mb-6 sm:mb-8 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <div className="inline-flex rounded-lg bg-gray-100 p-1 border border-gray-200 min-w-max">
               {tabs.map((tab) => (
                 <button
@@ -244,11 +251,12 @@ const ValidationPlanPage = () => {
           </div>
 
           {/* Tab 1 — 7-Day Plan */}
-          {activeTab === 'plan' && (
+          <div className={`${activeTab === 'plan' ? 'block' : 'hidden'} print:block print:mt-8`}>
+            <h2 className="hidden print:block text-xl font-bold text-gray-900 mb-4 border-b pb-2">7-Day Plan</h2>
             <div className="space-y-3 sm:space-y-4">
               {seven_day_plan.map((item, i) => (
-                <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm flex gap-3 sm:gap-4">
-                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ${
+                <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm flex gap-3 sm:gap-4 print:shadow-none print:border-gray-300">
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 print:border print:border-gray-800 print:text-gray-900 ${
                     item.day <= 5 ? 'bg-[#534AB7]' : 'bg-emerald-500'
                   }`}>
                     {item.day}
@@ -257,31 +265,33 @@ const ValidationPlanPage = () => {
                     <h3 className="text-sm font-semibold text-gray-900">{item.title}</h3>
                     <p className="text-sm text-gray-600 mt-1 leading-relaxed">{item.description}</p>
                     {item.action && (
-                      <p className="text-sm text-[#534AB7] font-medium mt-2">Action: {item.action}</p>
+                      <p className="text-sm text-[#534AB7] font-medium mt-2 print:text-gray-800">Action: {item.action}</p>
                     )}
                   </div>
                 </div>
               ))}
             </div>
-          )}
+          </div>
 
           {/* Tab 2 — Interview Questions */}
-          {activeTab === 'interview' && (
-            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
-              <h2 className="text-base font-semibold text-gray-900 mb-4">Customer interview questions</h2>
+          <div className={`${activeTab === 'interview' ? 'block' : 'hidden'} print:block print:mt-8`}>
+            <h2 className="hidden print:block text-xl font-bold text-gray-900 mb-4 border-b pb-2">Interview Questions</h2>
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm print:shadow-none print:border-gray-300">
+              <h2 className="text-base font-semibold text-gray-900 mb-4 print:hidden">Customer interview questions</h2>
               <div>
                 {interview_questions.map((question, index) => (
-                  <div key={index} className="bg-gray-50 rounded-lg px-4 py-3 mb-3 text-sm text-gray-700 leading-relaxed border border-gray-100">
+                  <div key={index} className="bg-gray-50 rounded-lg px-4 py-3 mb-3 text-sm text-gray-700 leading-relaxed border border-gray-100 print:bg-white print:border-gray-300">
                     {question}
                   </div>
                 ))}
               </div>
             </div>
-          )}
+          </div>
 
           {/* Tab 3 — Cold Email */}
-          {activeTab === 'email' && (
-            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
+          <div className={`${activeTab === 'email' ? 'block' : 'hidden'} print:block print:mt-8`}>
+            <h2 className="hidden print:block text-xl font-bold text-gray-900 mb-4 border-b pb-2">Cold Email</h2>
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm print:shadow-none print:border-gray-300">
               <p className="text-sm font-semibold text-gray-900 mb-4">
                 <span className="text-gray-500">Subject: </span>
                 {subjectText}
@@ -291,7 +301,7 @@ const ValidationPlanPage = () => {
                   <p key={index} className="whitespace-pre-line">{para}</p>
                 ))}
               </div>
-              <div className="mt-4">
+              <div className="mt-4 print:hidden">
                 <button
                   onClick={handleCopy}
                   className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition inline-flex items-center gap-2"
@@ -303,35 +313,42 @@ const ValidationPlanPage = () => {
                 </button>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Tab 4 — MVP Test Plan */}
-          {activeTab === 'mvp' && (
-            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
-              <h2 className="text-base font-semibold text-gray-900 mb-5">MVP testing roadmap</h2>
+          <div className={`${activeTab === 'mvp' ? 'block' : 'hidden'} print:block print:mt-8`}>
+            <h2 className="hidden print:block text-xl font-bold text-gray-900 mb-4 border-b pb-2">MVP Test Plan</h2>
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm print:shadow-none print:border-gray-300">
+              <h2 className="text-base font-semibold text-gray-900 mb-5 print:hidden">MVP testing roadmap</h2>
               <div className="space-y-4">
                 <div className="flex gap-3 sm:gap-4 items-start">
-                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5 bg-[#534AB7]/10 text-[#534AB7]">Week 1</span>
+                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5 bg-[#534AB7]/10 text-[#534AB7] print:border print:border-[#534AB7]">Week 1</span>
                   <p className="text-sm text-gray-600 mt-1">{mvp_test_plan.week1}</p>
                 </div>
                 <div className="flex gap-3 sm:gap-4 items-start">
-                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5 bg-[#534AB7]/10 text-[#534AB7]">Week 2</span>
+                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5 bg-[#534AB7]/10 text-[#534AB7] print:border print:border-[#534AB7]">Week 2</span>
                   <p className="text-sm text-gray-600 mt-1">{mvp_test_plan.week2}</p>
                 </div>
                 <div className="flex gap-3 sm:gap-4 items-start">
-                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5 bg-amber-100 text-amber-700 whitespace-nowrap">Success</span>
+                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5 bg-amber-100 text-amber-700 whitespace-nowrap print:border print:border-amber-700">Success</span>
                   <p className="text-sm text-gray-600 mt-1">{mvp_test_plan.success_metric}</p>
                 </div>
                 <div className="flex gap-3 sm:gap-4 items-start">
-                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5 bg-red-100 text-red-700 whitespace-nowrap">Kill</span>
+                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5 bg-red-100 text-red-700 whitespace-nowrap print:border print:border-red-700">Kill</span>
                   <p className="text-sm text-gray-600 mt-1">{mvp_test_plan.kill_condition}</p>
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Bottom Action Buttons */}
-          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-end">
+          <div className="no-print mt-8 flex flex-col sm:flex-row gap-3 justify-end">
+            <button
+              onClick={handleGenerate}
+              className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+            >
+              Regenerate Plan
+            </button>
             <Link
               to={`/report?id=${idea.id}`}
               className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"

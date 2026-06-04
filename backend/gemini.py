@@ -2,6 +2,7 @@ import os
 import json
 from google import genai
 from dotenv import load_dotenv
+from research_engine import run_rag_research
 
 load_dotenv()
 
@@ -15,11 +16,19 @@ def analyze_idea(idea_data):
     if not client:
         return {"error": "GEMINI_API_KEY is missing. Please add it to your .env file."}
         
+    try:
+        rag_context = run_rag_research(idea_data)
+    except Exception as e:
+        print(f"RAG Engine Error: {e}")
+        rag_context = "RAG Engine unavailable."
+
     prompt = f"""You are an expert startup analyst.
 Analyze this startup idea and return 
 ONLY a valid JSON object.
 No markdown, no backticks, no extra text.
 Just the raw JSON.
+
+{rag_context}
 
 Startup Idea Details:
 Name: {idea_data.get('name', '')}

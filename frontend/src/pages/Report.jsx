@@ -168,6 +168,27 @@ export default function ReportPage() {
 
   const recStyles = getRecStyles()
 
+  const handleRegenerate = async () => {
+    try {
+      setLoading(true)
+      await analyzeIdea(idea.id, true)
+      const reportRes = await getReport(idea.id)
+      setReport(reportRes.data)
+      setLoading(false)
+    } catch (err) {
+      console.error(err)
+      setError(err.message || "Analysis failed, try again")
+      setLoading(false)
+    }
+  }
+
+  const handleExportPDF = () => {
+    const oldTitle = document.title;
+    document.title = `${startupName.replace(/\s+/g, '_')}_Report`;
+    window.print();
+    document.title = oldTitle;
+  };
+
   const sidebarContent = (
     <div className="px-5 py-5">
       <h2 className="text-lg font-bold text-gray-900 mt-1 truncate" title={startupName}>
@@ -228,7 +249,7 @@ export default function ReportPage() {
     <div className="min-h-screen bg-[#F8F9FA]">
       <Navbar showNewIdea={false} onMenuClick={() => setSidebarOpen(true)}>
         <button
-          onClick={() => alert('📄 Export PDF coming in the next update')}
+          onClick={handleExportPDF}
           className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 sm:px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -245,7 +266,7 @@ export default function ReportPage() {
         </Sidebar>
 
         {/* Main content */}
-        <main className="lg:ml-[200px] flex-1 p-4 sm:p-6 md:p-8 min-h-[calc(100vh-4rem)]">
+        <main id="pdf-content" className="lg:ml-[200px] flex-1 p-4 sm:p-6 md:p-8 min-h-[calc(100vh-4rem)] bg-[#F8F9FA]">
           {/* Analysis Summary section ref */}
           <div ref={sectionRefs.summary} />
 
@@ -426,14 +447,20 @@ export default function ReportPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 shadow-sm">
               <ol className="list-decimal pl-5 space-y-3 text-sm text-gray-700">
                 {next_steps && next_steps.map((step, i) => (
-                  <li key={i}>{step}</li>
+                  <li key={i}>{step.replace(/\*\*/g, '')}</li>
                 ))}
               </ol>
             </div>
           </section>
 
           {/* Bottom Action Buttons */}
-          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-end">
+          <div className="no-print mt-8 flex flex-col sm:flex-row gap-3 justify-end">
+            <button
+              onClick={handleRegenerate}
+              className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+            >
+              Regenerate Report
+            </button>
             <Link
               to="/dashboard"
               className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"

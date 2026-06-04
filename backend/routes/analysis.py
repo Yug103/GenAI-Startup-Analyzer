@@ -25,8 +25,11 @@ def analyze(idea_id):
             # Check if report already exists
             cur.execute("SELECT * FROM reports WHERE idea_id = %s", (idea_id,))
             existing = cur.fetchone()
-            if existing:
+            force = request.args.get("force") == "true"
+            if existing and not force:
                 return jsonify({"success": True, "data": existing}), 200
+            if existing and force:
+                cur.execute("DELETE FROM reports WHERE idea_id = %s", (idea_id,))
 
             # Analyze
             result = analyze_idea(idea)
@@ -105,8 +108,11 @@ def validate(idea_id):
             # Check if validation exists
             cur.execute("SELECT * FROM validation_plans WHERE idea_id = %s", (idea_id,))
             existing = cur.fetchone()
-            if existing:
+            force = request.args.get("force") == "true"
+            if existing and not force:
                 return jsonify({"success": True, "data": existing}), 200
+            if existing and force:
+                cur.execute("DELETE FROM validation_plans WHERE idea_id = %s", (idea_id,))
 
             # Generate plan
             result = generate_validation(idea)

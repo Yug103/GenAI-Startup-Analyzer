@@ -53,8 +53,9 @@ const getAuthHeaders = () => {
   };
 };
 
-export const analyzeIdea = async (ideaId) => {
-  const response = await fetch(`${API_BASE}/ideas/${ideaId}/analyze`, {
+export const analyzeIdea = async (ideaId, force = false) => {
+  const url = force ? `${API_BASE}/ideas/${ideaId}/analyze?force=true` : `${API_BASE}/ideas/${ideaId}/analyze`;
+  const response = await fetch(url, {
     method: 'POST',
     headers: getAuthHeaders()
   });
@@ -73,8 +74,9 @@ export const getReport = async (ideaId) => {
   return data;
 };
 
-export const generateValidation = async (ideaId) => {
-  const response = await fetch(`${API_BASE}/ideas/${ideaId}/validate`, {
+export const generateValidation = async (ideaId, force = false) => {
+  const url = force ? `${API_BASE}/ideas/${ideaId}/validate?force=true` : `${API_BASE}/ideas/${ideaId}/validate`;
+  const response = await fetch(url, {
     method: 'POST',
     headers: getAuthHeaders()
   });
