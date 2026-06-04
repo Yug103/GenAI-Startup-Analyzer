@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from google import genai
 from dotenv import load_dotenv
 from research_engine import run_rag_research
@@ -60,7 +61,7 @@ Return exactly this JSON structure:
     "name": string,
     "type": direct or indirect or substitute,
     "pricing": string,
-    "threat_level": high or medium or low,
+    "threat_level": high or medium or low
   "market_insights": one paragraph string,
   "next_steps": array of exactly 3 strings
 }}"""
@@ -77,6 +78,7 @@ Return exactly this JSON structure:
             text = text[3:]
         if text.endswith("```"):
             text = text[:-3]
+        text = re.sub(r',\s*([\]}])', r'\1', text)
         return json.loads(text.strip())
     except Exception as e:
         if 'response' in locals() and hasattr(response, 'text'):
@@ -86,6 +88,7 @@ Return exactly this JSON structure:
                 end = text.rfind('}')
                 if start != -1 and end != -1:
                     clean_text = text[start:end+1]
+                    clean_text = re.sub(r',\s*([\]}])', r'\1', clean_text)
                     return json.loads(clean_text)
             except Exception:
                 pass
@@ -124,7 +127,7 @@ Return exactly this JSON structure:
     "day": number,
     "title": string,
     "description": string,
-    "action": string,
+    "action": string
   "mvp_test_plan": {{
     "week1": string,
     "week2": string,
@@ -146,6 +149,7 @@ Return exactly this JSON structure:
             text = text[3:]
         if text.endswith("```"):
             text = text[:-3]
+        text = re.sub(r',\s*([\]}])', r'\1', text)
         return json.loads(text.strip())
     except Exception as e:
         if 'response' in locals() and hasattr(response, 'text'):
@@ -155,6 +159,7 @@ Return exactly this JSON structure:
                 end = text.rfind('}')
                 if start != -1 and end != -1:
                     clean_text = text[start:end+1]
+                    clean_text = re.sub(r',\s*([\]}])', r'\1', clean_text)
                     return json.loads(clean_text)
             except Exception:
                 pass
