@@ -29,6 +29,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('ideavalidator_token', result.token);
   };
 
+  const googleLogin = async (credential) => {
+    const result = await api.googleLogin(credential);
+    setUser(result.user);
+    setToken(result.token);
+    localStorage.setItem('ideavalidator_user', JSON.stringify(result.user));
+    localStorage.setItem('ideavalidator_token', result.token);
+  };
+
   // Registers a new user via the Flask backend and saves session data locally
   const registerUser = async (firstName, lastName, email, password, role) => {
     const result = await api.register(firstName, lastName, email, password, role);
@@ -46,7 +54,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, loginUser, registerUser, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, loginUser, googleLogin, registerUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

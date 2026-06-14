@@ -40,8 +40,9 @@ def analyze(idea_id):
             cur.execute("""
                 INSERT INTO reports (
                     idea_id, overall_score, recommendation, category_scores,
-                    strengths, weaknesses, risks, competitors, market_insights, next_steps
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    strengths, weaknesses, risks, competitors, market_insights,
+                    investment_sources, startup_requirements, next_steps
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING *;
             """, (
                 idea_id,
@@ -53,6 +54,8 @@ def analyze(idea_id):
                 json.dumps(result.get("risks", [])),
                 json.dumps(result.get("competitors", [])),
                 result.get("market_insights"),
+                json.dumps(result.get("investment_sources", [])),
+                json.dumps(result.get("startup_requirements", {})),
                 json.dumps(result.get("next_steps", []))
             ))
             report = cur.fetchone()
@@ -81,7 +84,7 @@ def get_report(idea_id):
             if not idea or str(idea["user_id"]) != str(user_id):
                 return jsonify({"error": "Unauthorized or not found"}), 403
 
-            cur.execute("SELECT * FROM reports WHERE idea_id = %s", (idea_id,))
+            cur.execute("SELECT * FROM reports WHERE idea_id = %s ORDER BY created_at DESC", (idea_id,))
             report = cur.fetchone()
             if not report:
                 return jsonify({"error": "Not analyzed yet"}), 404
@@ -157,7 +160,7 @@ def get_validation(idea_id):
             if not idea or str(idea["user_id"]) != str(user_id):
                 return jsonify({"error": "Unauthorized or not found"}), 403
 
-            cur.execute("SELECT * FROM validation_plans WHERE idea_id = %s", (idea_id,))
+            cur.execute("SELECT * FROM validation_plans WHERE idea_id = %s ORDER BY created_at DESC", (idea_id,))
             plan = cur.fetchone()
             if not plan:
                 return jsonify({"error": "Validation plan not generated yet"}), 404

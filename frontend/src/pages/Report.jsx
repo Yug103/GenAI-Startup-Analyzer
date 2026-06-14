@@ -53,6 +53,8 @@ export default function ReportPage() {
     weaknesses: useRef(null),
     competitors: useRef(null),
     risks: useRef(null),
+    investments: useRef(null),
+    requirements: useRef(null),
   }
 
   const sidebarLinks = [
@@ -61,6 +63,8 @@ export default function ReportPage() {
     { label: 'Strengths & Weaknesses', id: 'strengths' },
     { label: 'Competitors', id: 'competitors' },
     { label: 'Risks & Next Steps', id: 'risks' },
+    { label: 'Investment Sources', id: 'investments' },
+    { label: 'Startup Requirements', id: 'requirements' },
   ]
 
   const handleSectionClick = (sectionId) => {
@@ -128,12 +132,16 @@ export default function ReportPage() {
   const {
     overall_score = 0,
     recommendation = '',
+    go_no_go_decision = '',
+    decision_reason = '',
     category_scores = {},
     strengths = [],
     weaknesses = [],
     risks = [],
     competitors = [],
     market_insights = '',
+    investment_sources = [],
+    startup_requirements = null,
     next_steps = []
   } = report || {}
 
@@ -149,8 +157,8 @@ export default function ReportPage() {
   }
 
   const getRecStyles = () => {
-    const status = (recommendation || '').toLowerCase()
-    if (status === 'stop') {
+    const status = (go_no_go_decision || recommendation || '').toLowerCase()
+    if (status === 'no-go' || status === 'stop') {
       return { box: 'bg-red-50 border-red-200', icon: 'text-red-600', text: 'text-red-700', desc: 'text-red-600', isStop: true }
     }
     if (status === 'pivot') {
@@ -171,9 +179,8 @@ export default function ReportPage() {
   const handleRegenerate = async () => {
     try {
       setLoading(true)
-      await analyzeIdea(idea.id, true)
-      const reportRes = await getReport(idea.id)
-      setReport(reportRes.data)
+      const analyzeRes = await analyzeIdea(idea.id, true)
+      setReport(analyzeRes.data)
       setLoading(false)
     } catch (err) {
       console.error(err)
@@ -212,11 +219,11 @@ export default function ReportPage() {
             )}
           </svg>
           <span className={`text-sm font-bold capitalize ${recStyles.text}`}>
-            Recommendation: {recommendation}
+            Decision: {go_no_go_decision || recommendation}
           </span>
         </div>
         <p className={`text-xs mt-1 ${recStyles.desc}`}>
-          {market_insights}
+          {decision_reason || market_insights}
         </p>
       </div>
 
@@ -266,7 +273,7 @@ export default function ReportPage() {
         </Sidebar>
 
         {/* Main content */}
-        <main id="pdf-content" className="lg:ml-[200px] flex-1 p-4 sm:p-6 md:p-8 min-h-[calc(100vh-4rem)] bg-[#F8F9FA]">
+        <main id="pdf-content" className="lg:ml-[260px] flex-1 p-4 sm:p-6 md:p-8 min-h-[calc(100vh-4rem)] bg-[#F8F9FA]">
           {/* Analysis Summary section ref */}
           <div ref={sectionRefs.summary} />
 
@@ -450,6 +457,55 @@ export default function ReportPage() {
                   <li key={i}>{step.replace(/\*\*/g, '')}</li>
                 ))}
               </ol>
+            </div>
+          </section>
+
+          {/* Investment Sources Section */}
+          <section className="mt-6" ref={sectionRefs.investments}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Investment Sources & Leads</h3>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <ul className="divide-y divide-gray-100">
+                {investment_sources && investment_sources.length > 0 ? (
+                  investment_sources.map((src, i) => (
+                    <li key={i} className="p-4 sm:p-5 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 uppercase">
+                          {src.type}
+                        </span>
+                        <h4 className="text-sm font-bold text-gray-900">{src.name}</h4>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-2">{src.description}</p>
+                    </li>
+                  ))
+                ) : (
+                  <li className="p-4 text-sm text-gray-500">No specific investment leads found.</li>
+                )}
+              </ul>
+            </div>
+          </section>
+
+          {/* Startup Requirements Section */}
+          <section className="mt-6" ref={sectionRefs.requirements}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Startup Requirements</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {startup_requirements && Object.entries(startup_requirements).map(([category, items], i) => (
+                <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm">
+                  <h4 className="text-sm font-bold text-gray-900 capitalize mb-3 border-b pb-2">{category.replace('_', ' ')}</h4>
+                  <ul className="space-y-2">
+                    {items && items.map((item, j) => (
+                      <li key={j} className="flex items-start gap-2 text-sm text-gray-700">
+                        <svg className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+              {!startup_requirements && (
+                <p className="text-sm text-gray-500">No startup requirements generated.</p>
+              )}
             </div>
           </section>
 

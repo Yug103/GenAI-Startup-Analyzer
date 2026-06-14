@@ -153,7 +153,7 @@ export default function IdeaSubmitPage() {
       <Navbar onMenuClick={() => setSidebarOpen(true)} />
       <Sidebar activePage="New Idea" mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <main className="lg:ml-[200px] flex-1 px-4 py-6 sm:py-8 min-h-[calc(100vh-4rem)]">
+      <main className="lg:ml-[260px] flex-1 px-4 py-6 sm:py-8 min-h-[calc(100vh-4rem)]">
         <div className="max-w-[680px] mx-auto">
           {/* Page heading */}
           <h1 className="text-2xl font-bold text-gray-900">Submit your startup idea</h1>

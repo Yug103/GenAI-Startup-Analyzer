@@ -21,6 +21,7 @@ def init_db():
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 );
             """)
+            cur.execute("ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;")
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS ideas (
                     id SERIAL PRIMARY KEY,
@@ -55,10 +56,14 @@ def init_db():
                     risks JSONB,
                     competitors JSONB,
                     market_insights TEXT,
+                    investment_sources JSONB,
+                    startup_requirements JSONB,
                     next_steps JSONB,
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 );
             """)
+            cur.execute("ALTER TABLE reports ADD COLUMN IF NOT EXISTS investment_sources JSONB;")
+            cur.execute("ALTER TABLE reports ADD COLUMN IF NOT EXISTS startup_requirements JSONB;")
             
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS validation_plans (
@@ -73,6 +78,17 @@ def init_db():
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 );
             """)
+            
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS password_resets (
+                    id SERIAL PRIMARY KEY,
+                    email VARCHAR(150) NOT NULL,
+                    otp VARCHAR(10) NOT NULL,
+                    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            
             conn.commit()
     except Exception as e:
         conn.rollback()

@@ -158,17 +158,20 @@ const Login = () => {
               {/* Forgot password */}
               <div className="mt-2 text-right relative">
                 <button
-                  type="button"
                   onClick={handleForgotPassword}
-                  className="text-xs font-medium text-[#534AB7] hover:text-[#423999] transition-colors"
+                  className="text-xs font-medium text-[#534AB7] hover:text-[#423999] transition-colors bg-transparent border-none cursor-pointer"
                 >
                   Forgot password?
                 </button>
-                {showForgotMsg && (
-                  <div className="absolute right-0 top-6 z-10 w-64 rounded-lg bg-gray-900 px-4 py-2.5 text-xs text-white shadow-lg toast-slide-down">
-                    🔒 Forgot password will be available in the next update.
-                  </div>
-                )}
+                {/* Coming soon tooltip */}
+                <div 
+                  className={`absolute right-0 -top-8 bg-gray-900 text-white text-[11px] px-2 py-1 rounded shadow-lg whitespace-nowrap transition-all duration-200 pointer-events-none ${
+                    showForgotMsg ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'
+                  }`}
+                >
+                  Coming in next update!
+                  <div className="absolute -bottom-1 right-3 w-2 h-2 bg-gray-900 rotate-45"></div>
+                </div>
               </div>
             </div>
 

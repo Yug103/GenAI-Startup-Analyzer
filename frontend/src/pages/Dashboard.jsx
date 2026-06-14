@@ -85,7 +85,7 @@ export default function DashboardPage() {
       <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Content */}
-      <main className="lg:ml-[200px] p-4 sm:p-6 md:p-8 bg-[#F8F9FA] min-h-[calc(100vh-4rem)]">
+      <main className="lg:ml-[260px] p-4 sm:p-6 md:p-8 bg-[#F8F9FA] min-h-[calc(100vh-4rem)]">
         {/* Greeting */}
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{getGreeting()}, {name}</h1>

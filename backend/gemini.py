@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import time
 from google import genai
 from dotenv import load_dotenv
 from research_engine import run_rag_research
@@ -45,7 +46,8 @@ Founder Background: {idea_data.get('founder_background', '') or idea_data.get('f
 Return exactly this JSON structure:
 {{
   "overall_score": number between 0 and 100,
-  "recommendation": exactly one of these words: proceed or pivot or stop,
+  "go_no_go_decision": exactly one of these words: Go, No-Go, or Pivot,
+  "decision_reason": one paragraph string explaining the Go/No-Go decision,
   "category_scores": {{
     "market_opportunity": number 0-100,
     "problem_severity": number 0-100,
@@ -62,37 +64,67 @@ Return exactly this JSON structure:
     "type": direct or indirect or substitute,
     "pricing": string,
     "threat_level": high or medium or low
+  ],
   "market_insights": one paragraph string,
+  "investment_sources": array of exactly 3 objects each with (MUST NOT BE EMPTY, INVENT REALISTIC EXAMPLES IF NEEDED): [
+    {{
+      "type": string (e.g. "Venture Capital", "Angel", "Grant"),
+      "name": string (e.g. "Sequoia", "Y Combinator"),
+      "description": string
+    }}
+  ],
+  "startup_requirements": {{
+    "legal": array of exactly 3 strings (e.g. "Incorporate as C-Corp", "Terms of Service"),
+    "tech_stack": array of exactly 4 strings (e.g. "React", "Node.js", "PostgreSQL", "AWS"),
+    "personnel": array of exactly 3 strings (e.g. "Full Stack Developer", "Marketing Lead"),
+    "marketing": array of exactly 3 strings (e.g. "SEO Optimization", "LinkedIn Outreach")
+  }},
   "next_steps": array of exactly 3 strings
-}}"""
+}}
+
+CRITICAL: YOU MUST PROVIDE REALISTIC DATA FOR EVERY SINGLE FIELD. DO NOT LEAVE ARRAYS EMPTY. DO NOT OMIT FIELDS."""
     
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-        )
-        text = response.text.strip()
-        if text.startswith("```json"):
-            text = text[7:]
-        if text.startswith("```"):
-            text = text[3:]
-        if text.endswith("```"):
-            text = text[:-3]
-        text = re.sub(r',\s*([\]}])', r'\1', text)
-        return json.loads(text.strip())
-    except Exception as e:
-        if 'response' in locals() and hasattr(response, 'text'):
-            try:
-                text = response.text.strip()
-                start = text.find('{')
-                end = text.rfind('}')
-                if start != -1 and end != -1:
-                    clean_text = text[start:end+1]
-                    clean_text = re.sub(r',\s*([\]}])', r'\1', clean_text)
-                    return json.loads(clean_text)
-            except Exception:
-                pass
-        return {"error": f"AI service error: {str(e)}"}
+    max_retries = 3
+    base_delay = 2
+    
+    for attempt in range(max_retries + 1):
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+            )
+            text = response.text.strip()
+            if text.startswith("```json"):
+                text = text[7:]
+            if text.startswith("```"):
+                text = text[3:]
+            if text.endswith("```"):
+                text = text[:-3]
+            text = re.sub(r',\s*([\]}])', r'\1', text)
+            return json.loads(text.strip())
+        except Exception as e:
+            error_str = str(e)
+            if "503" in error_str or "UNAVAILABLE" in error_str or "429" in error_str:
+                if attempt < max_retries:
+                    delay = base_delay * (2 ** attempt)
+                    print(f"Gemini API busy (503/429). Retrying in {delay} seconds (Attempt {attempt + 1}/{max_retries})...")
+                    time.sleep(delay)
+                    continue
+            
+            # If not a retryable error or max retries reached, try to salvage partial response
+            if 'response' in locals() and hasattr(response, 'text'):
+                try:
+                    text = response.text.strip()
+                    start = text.find('{')
+                    end = text.rfind('}')
+                    if start != -1 and end != -1:
+                        clean_text = text[start:end+1]
+                        clean_text = re.sub(r',\s*([\]}])', r'\1', clean_text)
+                        return json.loads(clean_text)
+                except Exception:
+                    pass
+            
+            return {"error": "Error 503: The developer is too cheap for a paid API. Free tier maxed out! Try again later. 💸"}
 
 def generate_validation(idea_data):
     if not client:
@@ -137,33 +169,46 @@ Return exactly this JSON structure:
   "success_metrics": array of 5 strings
 }}"""
     
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-        )
-        text = response.text.strip()
-        if text.startswith("```json"):
-            text = text[7:]
-        if text.startswith("```"):
-            text = text[3:]
-        if text.endswith("```"):
-            text = text[:-3]
-        text = re.sub(r',\s*([\]}])', r'\1', text)
-        return json.loads(text.strip())
-    except Exception as e:
-        if 'response' in locals() and hasattr(response, 'text'):
-            try:
-                text = response.text.strip()
-                start = text.find('{')
-                end = text.rfind('}')
-                if start != -1 and end != -1:
-                    clean_text = text[start:end+1]
-                    clean_text = re.sub(r',\s*([\]}])', r'\1', clean_text)
-                    return json.loads(clean_text)
-            except Exception:
-                pass
-        return {"error": f"AI service error: {str(e)}"}
+    max_retries = 3
+    base_delay = 2
+    
+    for attempt in range(max_retries + 1):
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+            )
+            text = response.text.strip()
+            if text.startswith("```json"):
+                text = text[7:]
+            if text.startswith("```"):
+                text = text[3:]
+            if text.endswith("```"):
+                text = text[:-3]
+            text = re.sub(r',\s*([\]}])', r'\1', text)
+            return json.loads(text.strip())
+        except Exception as e:
+            error_str = str(e)
+            if "503" in error_str or "UNAVAILABLE" in error_str or "429" in error_str:
+                if attempt < max_retries:
+                    delay = base_delay * (2 ** attempt)
+                    print(f"Gemini API busy (503/429). Retrying in {delay} seconds (Attempt {attempt + 1}/{max_retries})...")
+                    time.sleep(delay)
+                    continue
+            
+            if 'response' in locals() and hasattr(response, 'text'):
+                try:
+                    text = response.text.strip()
+                    start = text.find('{')
+                    end = text.rfind('}')
+                    if start != -1 and end != -1:
+                        clean_text = text[start:end+1]
+                        clean_text = re.sub(r',\s*([\]}])', r'\1', clean_text)
+                        return json.loads(clean_text)
+                except Exception:
+                    pass
+            
+            return {"error": "Error 503: We ran out of free credits because the dev won't pay Google $5. Try again later!"}
 
 if __name__ == "__main__":
     test = {

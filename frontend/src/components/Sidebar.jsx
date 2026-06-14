@@ -39,12 +39,22 @@ export default function Sidebar({ activePage, children, mobileOpen = false, onCl
         </svg>
       ),
     },
+    {
+      name: 'Compare Ideas',
+      to: '/compare',
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+        </svg>
+      ),
+    },
   ];
 
   const isLinkActive = (linkName) => {
     if (activePage) return activePage === linkName;
     if (linkName === 'Dashboard') return location.pathname === '/dashboard';
     if (linkName === 'New Idea') return location.pathname === '/submit';
+    if (linkName === 'Compare Ideas') return location.pathname === '/compare';
     if (linkName === 'Validation Reports')
       return location.pathname.startsWith('/validations') || location.pathname.startsWith('/validation-plan');
     return false;
@@ -96,7 +106,7 @@ export default function Sidebar({ activePage, children, mobileOpen = false, onCl
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="w-[200px] min-h-[calc(100vh-4rem)] border-r border-gray-200 bg-white hidden lg:flex flex-col fixed left-0 top-16 z-20">
+      <aside className="w-[260px] h-[calc(100vh-4rem)] overflow-y-auto overflow-x-hidden border-r border-gray-200 bg-white hidden lg:flex flex-col fixed left-0 top-16 z-20 shadow-sm scrollbar-thin scrollbar-thumb-gray-300">
         {navContent}
       </aside>
 
@@ -109,7 +119,7 @@ export default function Sidebar({ activePage, children, mobileOpen = false, onCl
             onClick={onClose}
           />
           {/* Drawer panel */}
-          <aside className="fixed top-0 left-0 bottom-0 w-[260px] bg-white shadow-xl flex flex-col sidebar-slide-in">
+          <aside className="fixed top-0 left-0 bottom-0 w-[280px] bg-white shadow-xl flex flex-col sidebar-slide-in">
             {/* Drawer header */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
               <span className="text-lg font-bold tracking-tight text-gray-900">Menu</span>

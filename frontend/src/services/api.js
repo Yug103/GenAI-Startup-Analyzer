@@ -28,6 +28,32 @@ export const login = async (email, password) => {
   return { token: data.token, user };
 };
 
+export const googleLogin = async (credential) => {
+  const response = await fetch(`${API_BASE}/google-login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ credential })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Google login failed');
+  }
+
+  const data = await response.json();
+  const nameParts = (data.user.full_name || '').split(' ');
+  const user = {
+    firstName: nameParts[0] || 'User',
+    lastName: nameParts.slice(1).join(' ') || '',
+    email: data.user.email,
+    role: 'Founder'
+  };
+
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  localStorage.setItem('ideavalidator_token', data.token);
+  return { token: data.token, user };
+};
+
 // Registers a new user with their full name and credentials, then automatically logs them in
 export const register = async (firstName, lastName, email, password, role) => {
   const fullName = `${firstName || ''} ${lastName || ''}`.trim() || 'User';
@@ -66,8 +92,8 @@ export const analyzeIdea = async (ideaId, force = false) => {
 
 export const getReport = async (ideaId) => {
   const response = await fetch(`${API_BASE}/ideas/${ideaId}/report`, {
-    method: 'GET',
-    headers: getAuthHeaders()
+    headers: getAuthHeaders(),
+    cache: 'no-store'
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Failed to get report');
@@ -88,9 +114,54 @@ export const generateValidation = async (ideaId, force = false) => {
 export const getValidation = async (ideaId) => {
   const response = await fetch(`${API_BASE}/ideas/${ideaId}/validation`, {
     method: 'GET',
-    headers: getAuthHeaders()
+    headers: getAuthHeaders(),
+    cache: 'no-store'
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Failed to get validation');
+  return data;
+};
+
+export const getComparison = async () => {
+  const response = await fetch(`${API_BASE}/ideas/compare`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+    cache: 'no-store'
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to get comparison data');
+  return data;
+};
+
+export const forgotPassword = async (email) => {
+  const response = await fetch(`${API_BASE}/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to send reset link');
+  return data;
+};
+
+export const verifyOTP = async (email, otp) => {
+  const response = await fetch(`${API_BASE}/verify-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Invalid or expired OTP');
+  return data;
+};
+
+export const resetPassword = async (email, otp, newPassword) => {
+  const response = await fetch(`${API_BASE}/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp, new_password: newPassword })
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Failed to reset password');
   return data;
 };

@@ -26,7 +26,7 @@ export default function RegisterPage() {
 
   const strength = getPasswordStrength();
 
-  // Handles user registration by calling the backend API and redirecting to login on success
+  // Handles user registration by calling the backend API and redirecting to dashboard on success
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -35,7 +35,7 @@ export default function RegisterPage() {
     try {
       await registerUser(firstName, lastName, email, password, role);
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 1500);
+      setTimeout(() => navigate('/dashboard'), 1500);
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
     } finally {
@@ -178,7 +178,7 @@ export default function RegisterPage() {
           {/* Success message */}
           {success && (
             <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
-              Account created successfully! Redirecting to login...
+              Account created successfully! Redirecting...
             </div>
           )}
 

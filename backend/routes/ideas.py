@@ -73,9 +73,17 @@ def get_ideas():
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """
-                SELECT id, name, problem, target_customer, industry, business_model, geography, pricing, assumptions, founder_bg, created_at
-                FROM ideas
-                WHERE user_id = %s
+                SELECT * FROM (
+                    SELECT DISTINCT ON (i.id)
+                        i.id, i.name, i.problem, i.target_customer, i.industry, 
+                        i.business_model, i.geography, i.pricing, i.assumptions, 
+                        i.founder_bg, i.created_at,
+                        r.overall_score, r.recommendation
+                    FROM ideas i
+                    LEFT JOIN reports r ON i.id = r.idea_id
+                    WHERE i.user_id = %s
+                    ORDER BY i.id, r.created_at DESC
+                ) AS recent_ideas
                 ORDER BY created_at DESC;
                 """,
                 (user_id,)
@@ -115,3 +123,46 @@ def delete_idea(idea_id):
         return jsonify({"error": f"An error occurred while deleting the idea: {str(e)}"}), 500
     finally:
         conn.close()
+
+# Retrieves all ideas and their corresponding reports for comparison
+@ideas_bp.route("/ideas/compare", methods=["GET"])
+@jwt_required()
+def compare_ideas():
+    user_id = get_jwt_identity()
+
+    conn = get_connection()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT * FROM (
+                    SELECT DISTINCT ON (i.id)
+                        i.id as idea_id, i.name, i.problem, i.target_customer, i.industry, 
+                        i.business_model, i.created_at as idea_created_at,
+                        r.id as report_id, r.overall_score, r.recommendation, 
+                        r.category_scores, r.strengths, r.weaknesses, r.risks,
+                        r.created_at as report_created_at
+                    FROM ideas i
+                    JOIN reports r ON i.id = r.idea_id
+                    WHERE i.user_id = %s
+                    ORDER BY i.id, r.created_at DESC
+                ) AS latest_reports
+                ORDER BY overall_score DESC NULLS LAST;
+                """,
+                (user_id,)
+            )
+            comparison_data = cur.fetchall()
+            
+            # Format datetime objects for JSON serialization
+            for data in comparison_data:
+                if "idea_created_at" in data and data["idea_created_at"]:
+                    data["idea_created_at"] = data["idea_created_at"].isoformat()
+                if "report_created_at" in data and data["report_created_at"]:
+                    data["report_created_at"] = data["report_created_at"].isoformat()
+
+            return jsonify(comparison_data), 200
+    except Exception as e:
+        return jsonify({"error": f"An error occurred while fetching comparison data: {str(e)}"}), 500
+    finally:
+        conn.close()
+

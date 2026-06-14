@@ -62,6 +62,22 @@ def mine_reviews(competitors_context):
         
     return context
 
+def find_investment_sources(idea_data):
+    """Search for relevant VC firms, angel networks, or grants."""
+    industry = idea_data.get('industry', 'tech')[:30]
+    geography = idea_data.get('geography', '')[:30]
+    
+    query = f"top venture capital firms angel investors accelerators for {industry} startups in {geography}"
+    results = search_web(query, num_results=3)
+    
+    context = ""
+    for r in results:
+        title = r.get('title')
+        snippet = r.get('body')
+        context += f"- **{title}**: {snippet}\n"
+        
+    return context
+
 def run_rag_research(idea_data):
     """Orchestrates the entire research phase."""
     print("Running RAG research...")
@@ -69,6 +85,7 @@ def run_rag_research(idea_data):
     market_context = get_market_context(idea_data)
     competitors = discover_competitors(idea_data)
     reviews = mine_reviews(competitors)
+    investment_sources = find_investment_sources(idea_data)
     
     rag_context = f"""
 --- REAL-TIME MARKET RESEARCH DATA (USE THIS TO ANSWER THE PROMPT) ---
@@ -81,6 +98,9 @@ def run_rag_research(idea_data):
     
 3. CUSTOMER COMPLAINTS / REVIEWS (Reddit & Web):
 {reviews if reviews else "No specific reviews found."}
+
+4. INVESTMENT SOURCES & LEADS:
+{investment_sources if investment_sources else "No specific investment sources found."}
     
 ---------------------------------------------------------------------
 """

@@ -75,7 +75,11 @@ const enhanceIdeaWithAnalysis = (dbIdea) => {
   };
 
   const hash = hashString(ideaInput.startupName || 'default');
-  const overallScore = getScaleValue(hash, 55, 94);
+  
+  // Use real score from backend if available, otherwise mock it
+  const overallScore = dbIdea.overall_score != null 
+    ? dbIdea.overall_score 
+    : getScaleValue(hash, 55, 94);
 
   let status = 'Pivot';
   let statusClasses = 'bg-amber-50 text-amber-700 border border-amber-200';
@@ -84,14 +88,19 @@ const enhanceIdeaWithAnalysis = (dbIdea) => {
   let recommendationStatus = 'Proceed with caution';
   let recommendationDesc = 'Moderate validation required';
 
-  if (overallScore >= 75) {
+  const recLower = (dbIdea.recommendation || '').toLowerCase();
+
+  // If we have a real recommendation of 'go', OR we have no recommendation but a high score
+  if (recLower === 'go' || (!dbIdea.recommendation && overallScore >= 75)) {
     status = 'Go';
     statusClasses = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
     iconBg = 'bg-[#534AB7]/10';
     iconColor = 'text-[#534AB7]';
     recommendationStatus = 'Proceed';
     recommendationDesc = 'Strong market opportunity detected';
-  } else if (overallScore < 50) {
+  } 
+  // If we have a real recommendation of 'no-go', OR no recommendation but a low score
+  else if (recLower === 'no-go' || (!dbIdea.recommendation && overallScore < 50)) {
     status = 'Stop';
     statusClasses = 'bg-red-50 text-red-700 border border-red-200';
     iconBg = 'bg-red-100';

@@ -79,7 +79,7 @@ const ValidationPlanPage = () => {
       <div className="min-h-screen bg-[#F8F9FA]">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
         <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="Validation Reports" />
-        <div className="lg:ml-[200px] flex flex-col justify-center items-center p-6 text-center min-h-[calc(100vh-4rem)]">
+        <div className="lg:ml-[260px] flex flex-col justify-center items-center p-6 text-center min-h-[calc(100vh-4rem)]">
           <div className="w-12 h-12 border-4 border-[#534AB7] border-t-transparent rounded-full animate-spin mb-4"></div>
           <p className="text-gray-500 text-sm">Loading...</p>
         </div>
@@ -92,7 +92,7 @@ const ValidationPlanPage = () => {
       <div className="min-h-screen bg-[#F8F9FA]">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
         <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="Validation Reports" />
-        <div className="lg:ml-[200px] flex flex-col justify-center items-center p-6 text-center min-h-[calc(100vh-4rem)]">
+        <div className="lg:ml-[260px] flex flex-col justify-center items-center p-6 text-center min-h-[calc(100vh-4rem)]">
           <div className="w-12 h-12 border-4 border-[#534AB7] border-t-transparent rounded-full animate-spin mb-4"></div>
           <p className="text-gray-500 text-sm">Generating your validation plan...</p>
         </div>
@@ -105,7 +105,7 @@ const ValidationPlanPage = () => {
       <div className="min-h-screen bg-[#F8F9FA]">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
         <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="Validation Reports" />
-        <div className="lg:ml-[200px] flex flex-col justify-center items-center p-6 text-center min-h-[calc(100vh-4rem)]">
+        <div className="lg:ml-[260px] flex flex-col justify-center items-center p-6 text-center min-h-[calc(100vh-4rem)]">
           <h2 className="text-xl font-bold text-gray-900 mb-2">Error</h2>
           <p className="text-red-500 mb-4 text-sm max-w-lg">{error}</p>
           <button
@@ -124,7 +124,7 @@ const ValidationPlanPage = () => {
       <div className="min-h-screen bg-[#F8F9FA]">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
         <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="Validation Reports" />
-        <div className="lg:ml-[200px] flex flex-col justify-center items-center p-6 text-center min-h-[calc(100vh-4rem)]">
+        <div className="lg:ml-[260px] flex flex-col justify-center items-center p-6 text-center min-h-[calc(100vh-4rem)]">
           <h2 className="text-xl font-bold text-gray-900 mb-2">No active idea found</h2>
           <p className="text-gray-500 mb-4 text-sm">Please submit a startup idea first to generate a validation plan.</p>
           <button
@@ -143,7 +143,7 @@ const ValidationPlanPage = () => {
       <div className="min-h-screen bg-[#F8F9FA]">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
         <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="Validation Reports" />
-        <main className="lg:ml-[200px] flex-1 py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center">
+        <main className="lg:ml-[260px] flex-1 py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-3">No Validation Plan Yet</h2>
           <p className="text-gray-500 mb-6 text-center max-w-md">
             You haven't generated a validation plan for <strong>{idea.startupName}</strong> yet. Click below to let AI create a tailored strategy.
@@ -168,7 +168,7 @@ const ValidationPlanPage = () => {
     success_metrics = []
   } = validationData
 
-  const customizedEmail = (cold_email.body || '').replace('[Your Name]', userName)
+  const customizedEmail = (cold_email.body || '').replace(/\[Your Name.*?\]/ig, userName).replace(/\[Name\]/ig, '[Prospect Name]')
   const emailParagraphs = customizedEmail.split('\n\n')
   const subjectText = cold_email.subject || ''
 
@@ -189,6 +189,17 @@ const ValidationPlanPage = () => {
     document.title = oldTitle;
   };
 
+  const renderFormattedText = (text) => {
+    if (!text) return null;
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index} className="font-semibold text-gray-900">{part.slice(2, -2)}</strong>;
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
       <Navbar onMenuClick={() => setSidebarOpen(true)}>
@@ -205,7 +216,7 @@ const ValidationPlanPage = () => {
 
       <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="Validation Reports" />
 
-      <main className="lg:ml-[200px] flex-1 py-6 sm:py-8 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-4rem)]">
+      <main className="lg:ml-[260px] flex-1 py-6 sm:py-8 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-4rem)]">
         <div id="pdf-content" className="max-w-4xl mx-auto bg-[#F8F9FA] p-4">
           {/* Page Heading */}
           <div>
@@ -262,10 +273,10 @@ const ValidationPlanPage = () => {
                     {item.day}
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900">{item.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">{item.description}</p>
+                    <h3 className="text-sm font-semibold text-gray-900">{renderFormattedText(item.title)}</h3>
+                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">{renderFormattedText(item.description)}</p>
                     {item.action && (
-                      <p className="text-sm text-[#534AB7] font-medium mt-2 print:text-gray-800">Action: {item.action}</p>
+                      <p className="text-sm text-[#534AB7] font-medium mt-2 print:text-gray-800">Action: {renderFormattedText(item.action)}</p>
                     )}
                   </div>
                 </div>
@@ -323,19 +334,19 @@ const ValidationPlanPage = () => {
               <div className="space-y-4">
                 <div className="flex gap-3 sm:gap-4 items-start">
                   <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5 bg-[#534AB7]/10 text-[#534AB7] print:border print:border-[#534AB7]">Week 1</span>
-                  <p className="text-sm text-gray-600 mt-1">{mvp_test_plan.week1}</p>
+                  <p className="text-sm text-gray-600 mt-1">{renderFormattedText(mvp_test_plan.week1)}</p>
                 </div>
                 <div className="flex gap-3 sm:gap-4 items-start">
                   <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5 bg-[#534AB7]/10 text-[#534AB7] print:border print:border-[#534AB7]">Week 2</span>
-                  <p className="text-sm text-gray-600 mt-1">{mvp_test_plan.week2}</p>
+                  <p className="text-sm text-gray-600 mt-1">{renderFormattedText(mvp_test_plan.week2)}</p>
                 </div>
                 <div className="flex gap-3 sm:gap-4 items-start">
                   <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5 bg-amber-100 text-amber-700 whitespace-nowrap print:border print:border-amber-700">Success</span>
-                  <p className="text-sm text-gray-600 mt-1">{mvp_test_plan.success_metric}</p>
+                  <p className="text-sm text-gray-600 mt-1">{renderFormattedText(mvp_test_plan.success_metric)}</p>
                 </div>
                 <div className="flex gap-3 sm:gap-4 items-start">
                   <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5 bg-red-100 text-red-700 whitespace-nowrap print:border print:border-red-700">Kill</span>
-                  <p className="text-sm text-gray-600 mt-1">{mvp_test_plan.kill_condition}</p>
+                  <p className="text-sm text-gray-600 mt-1">{renderFormattedText(mvp_test_plan.kill_condition)}</p>
                 </div>
               </div>
             </div>
